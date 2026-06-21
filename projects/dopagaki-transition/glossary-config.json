@@ -23,11 +23,25 @@
     "adr/ADR-CATALOG.md",
     "GLOSSARY.md"
   ],
-  "output": "build/glossary/candidates-dopagaki.json",
+  "filter": {
+    "seed_first": true,
+    "min_morph_freq": 3,
+    "min_chapters": 2,
+    "max_candidates_output": 100,
+    "emit_reject": false
+  },
   "knowledge_filter": {
     "enabled": false,
     "mcp_server": "glossary-knowledge",
-    "domain": "attention-economics"
+    "transport": "stdio",
+    "domain": "attention-economics",
+    "batch_size": 50
+  },
+  "output": {
+    "registry": "meta/glossary-registry.json",
+    "adopt": "meta/glossary-adopt.json",
+    "hold": "meta/glossary-hold.json",
+    "reject": "build/glossary/reject.jsonl"
   },
   "scoring": {
     "adopt_threshold": 5,
@@ -61,6 +75,8 @@
     "Attention Inflation",
     "Attention Capacity",
     "Attention Capture",
+    "Capacity",
+    "Capture",
     "Platform Capital",
     "Participation Capital",
     "Effective Population",
@@ -72,10 +88,14 @@
     "進化的不一致",
     "Skinner Box",
     "スキナー箱",
+    "Industrialized Skinner Box",
     "Participatory Resource",
     "Behavioural Extraction Economy",
     "行動採掘",
-    "ドーパミン"
+    "ゼロサム",
+    "ドーパミン",
+    "予測可能性",
+    "予測機械"
   ],
   "manual_reject": ["TikTok", "SNS", "GAFAM", "Meta", "Google"]
 }

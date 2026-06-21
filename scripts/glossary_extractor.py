@@ -428,6 +428,64 @@ def build_output(
     }
 
 
+def _resolve_output_path(root: Path, rel: str) -> Path:
+    path = Path(rel)
+    return path.resolve() if path.is_absolute() else (root / rel).resolve()
+
+
+def write_outputs(root: Path, config: dict, payload: dict) -> dict[str, Path]:
+    """Write adopt/hold/reject per config. Legacy single-file output supported."""
+    out_cfg = config.get("output", "meta/glossary-candidates.json")
+    filter_cfg = config.get("filter", {})
+    emit_reject = filter_cfg.get("emit_reject", False)
+
+    if isinstance(out_cfg, str):
+        path = _resolve_output_path(root, out_cfg)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        with path.open("w", encoding="utf-8") as fh:
+            json.dump(payload, fh, ensure_ascii=False, indent=2)
+            fh.write("\n")
+        return {"legacy": path}
+
+    candidates = payload["candidates"]
+    by_status = {
+        "adopt": [c for c in candidates if c["status"] == "adopt"],
+        "hold": [c for c in candidates if c["status"] == "hold"],
+        "reject": [c for c in candidates if c["status"] == "reject"],
+    }
+    written: dict[str, Path] = {}
+
+    for status in ("adopt", "hold"):
+        rel = out_cfg.get(status)
+        if not rel:
+            continue
+        path = _resolve_output_path(root, rel)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        doc = {
+            "generated_at": payload["generated_at"],
+            "status": status,
+            "morphology": payload["morphology"],
+            "corpus_files": payload["corpus_files"],
+            "count": len(by_status[status]),
+            "candidates": by_status[status],
+        }
+        with path.open("w", encoding="utf-8") as fh:
+            json.dump(doc, fh, ensure_ascii=False, indent=2)
+            fh.write("\n")
+        written[status] = path
+
+    if emit_reject:
+        rel = out_cfg.get("reject", "build/glossary/reject.jsonl")
+        path = _resolve_output_path(root, rel)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        with path.open("w", encoding="utf-8") as fh:
+            for row in by_status["reject"]:
+                fh.write(json.dumps(row, ensure_ascii=False) + "\n")
+        written["reject"] = path
+
+    return written
+
+
 def run(config_path: Path) -> dict:
     config = load_config(config_path)
     root = project_root_from_config(config_path, config)
@@ -450,17 +508,11 @@ def run(config_path: Path) -> dict:
     catalog_terms = load_catalog_terms(catalog_paths)
 
     records = extract_from_corpus(backend, corpus_files)
-    output = build_output(config, backend, records, corpus_files, glossary_terms, catalog_terms)
+    payload = build_output(config, backend, records, corpus_files, glossary_terms, catalog_terms)
 
-    out_rel = config.get("output", "meta/glossary-candidates.json")
-    out_path = Path(out_rel).resolve() if Path(out_rel).is_absolute() else (root / out_rel).resolve()
-    out_path.parent.mkdir(parents=True, exist_ok=True)
-    with out_path.open("w", encoding="utf-8") as fh:
-        json.dump(output, fh, ensure_ascii=False, indent=2)
-        fh.write("\n")
-
-    output["_written_to"] = str(out_path)
-    return output
+    written = write_outputs(root, config, payload)
+    payload["_written"] = {k: str(v) for k, v in written.items()}
+    return payload
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -495,8 +547,16 @@ def main(argv: list[str] | None = None) -> int:
         return 1
 
     summary = result["summary"]
-    print(f"Wrote {result['_written_to']}")
-    print(f"Candidates: adopt={summary.get('adopt',0)} hold={summary.get('hold',0)} reject={summary.get('reject',0)}")
+    written = result.get("_written", {})
+    if "legacy" in written:
+        print(f"Wrote {written['legacy']}")
+    else:
+        for kind, path in written.items():
+            print(f"Wrote {kind}: {path}")
+    print(
+        f"Candidates: adopt={summary.get('adopt', 0)} "
+        f"hold={summary.get('hold', 0)} reject={summary.get('reject', 0)}"
+    )
     return 0
 
 
