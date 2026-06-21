@@ -137,6 +137,29 @@ flowchart LR
 
 ---
 
+## 運用通知（LINE · 計画）
+
+Phase 3+（定期 batch 運用）で、prep の成否を **LINE Business** に通知する予定です。既存のサーバ監視（`line-notification.com` · Webhook）と**同じ HTTP POST 経路**を流用するため、新規 LINE 連携のコストは低い想定です。
+
+```text
+EventBridge（prep succeeded / failed / warning）
+  → Lambda prep-notify
+  → 既存 Webhook URL（Secrets Manager）
+  → LINE Business アカウントへ配信
+```
+
+| severity | 用途の例 |
+|---|---|
+| `✅ SUCCESS` | batch 正常完了 · adopt/hold 生成 |
+| `⚠️ WARNING` | shard 遅延 · 閾値超過 |
+| `❌ FAILED` | prep 失敗 · shard エラー |
+
+メッセージ体裁はサーバ監視のヘルスレポートと同型（`📍` · `💬` · `📋 Details` · `🕐`）。メール（Amazon SES）は LINE で足りない場合の任意経路。
+
+くわしく: [docs/IAC.md § LINE Webhook](docs/IAC.md#line-webhook--運用通知phase-3--第一候補) · Terraform モジュール `prep-notify`（[infra/terraform/](infra/terraform/)）
+
+---
+
 ## 利用側リポジトリ
 
 | リポジトリ | 用途 | 設定 |
@@ -218,7 +241,7 @@ term-prep-platform/
 
 - [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — 提供範囲と UML 図
 - [docs/IMPLEMENTATION-COMPARISON.md](docs/IMPLEMENTATION-COMPARISON.md) — Phase · connector · AWS（EC2/EKS/ECS/SageMaker）比較
-- [docs/IAC.md](docs/IAC.md) — **IaC 議論まとめ** · Terraform 方針 · consumer/API 接続 · KMS · TF vs CFN
+- [docs/IAC.md](docs/IAC.md) — IaC · Terraform · **LINE 運用通知** · KMS · TF vs CFN
 - [meta/TO-BE-PLATFORM.md](meta/TO-BE-PLATFORM.md) — AS-IS / To-Be · ロードマップ
 - [meta/TODO.md](meta/TODO.md) — 実行チェックリスト
 - [meta/glossary-pipeline/PROBLEMS.md](meta/glossary-pipeline/PROBLEMS.md#p-007) — Source connector 課題
