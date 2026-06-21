@@ -14,7 +14,9 @@ Also: expand [devassist-dictionary-v0.json](https://github.com/wombat2006/techde
 
 ## Config
 
-[projects/techdev-cursor/glossary-config.json](../projects/techdev-cursor/glossary-config.json)
+[projects/techdev-cursor/glossary-config.json](../projects/techdev-cursor/glossary-config.json) — **Phase 0** schema (`filter` / `output` / `knowledge_filter`; adopt/hold split).
+
+Consumer copy in repo: [techdev-cursor/meta/glossary-config.json](https://github.com/wombat2006/techdev-cursor/blob/master/meta/glossary-config.json)
 
 Set `corpus.files` when Drive sync local mirror path is fixed.
 
