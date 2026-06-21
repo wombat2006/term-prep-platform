@@ -1,0 +1,19 @@
+[project]
+name = "glossary-knowledge-mcp"
+version = "0.1.0"
+description = "Glossary Knowledge Filter MCP (stub)"
+requires-python = ">=3.10"
+dependencies = [
+    "mcp>=1.12.0",
+]
+
+[project.scripts]
+glossary-knowledge-mcp = "glossary_knowledge_mcp.__main__:main"
+
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["glossary_knowledge_mcp*"]

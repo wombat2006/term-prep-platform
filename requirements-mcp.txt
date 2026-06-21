@@ -1,0 +1,2 @@
+# MCP servers — install after requirements-dev.txt
+-r mcp/glossary-knowledge/requirements.txt

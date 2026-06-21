@@ -1,0 +1,10 @@
+.DS_Store
+.cursor/
+.vscode/
+.venv/
+__pycache__/
+*.py[cod]
+*.log
+build/
+projects/*/glossary-candidates.json
+mcp/glossary-knowledge/providers.json

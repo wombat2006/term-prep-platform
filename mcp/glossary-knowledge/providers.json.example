@@ -1,0 +1,13 @@
+{
+  "providers": [
+    {
+      "id": "null",
+      "type": "null",
+      "priority": 999,
+      "comment": "Default stub — always returns unknown"
+    }
+  ],
+  "default_chain": ["null"],
+  "cache": "build/glossary/knowledge-cache.sqlite",
+  "fail_mode": "unknown"
+}

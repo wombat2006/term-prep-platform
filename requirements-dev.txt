@@ -1,0 +1,14 @@
+# Tooling dependencies (glossary extraction and similar text analysis)
+#
+# Requires: MeCab shared library (libmecab) on the host OS.
+#   Debian/Ubuntu: sudo apt install mecab libmecab-dev
+#   macOS: brew install mecab
+#
+# Dictionary: unidic-lite (pip) — mandatory for this project.
+#   Optional full UniDic: pip install unidic && python -m unidic download
+
+fugashi>=1.3.0
+unidic-lite>=1.0.8
+
+# Legacy fallback — NOT used when morphology.required=true (default).
+# janome>=0.5.0

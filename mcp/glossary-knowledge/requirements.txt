@@ -1,0 +1,6 @@
+# Glossary Knowledge Filter MCP (stub)
+#
+# Requires Python >= 3.10 (mcp package).
+# Install: python3 -m pip install -r mcp/glossary-knowledge/requirements.txt
+# Or:      cd mcp/glossary-knowledge && pip install -e .
+mcp>=1.12.0

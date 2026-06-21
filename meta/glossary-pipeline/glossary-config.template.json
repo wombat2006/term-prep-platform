@@ -1,0 +1,45 @@
+{
+  "$comment": "Copy to meta/glossary-config.json and customize per project",
+  "version": "1.0.0",
+  "project_root": "..",
+  "morphology": {
+    "backend": "fugashi",
+    "dictionary": "unidic-lite",
+    "required": true
+  },
+  "corpus": {
+    "description": "Markdown files to scan — list paths relative to project_root",
+    "files": []
+  },
+  "reference_catalogs": [],
+  "filter": {
+    "seed_first": false,
+    "min_morph_freq": 1,
+    "min_chapters": 1,
+    "max_candidates_output": 200,
+    "emit_reject": false
+  },
+  "output": {
+    "registry": "meta/glossary-registry.json",
+    "adopt": "meta/glossary-adopt.json",
+    "hold": "meta/glossary-hold.json",
+    "reject": "build/glossary/reject.jsonl",
+    "legacy_candidates": "meta/glossary-candidates.json"
+  },
+  "scoring": {
+    "adopt_threshold": 5,
+    "hold_threshold": 3,
+    "weights": {
+      "in_ts_or_adr": 3,
+      "multi_chapter": 2,
+      "emphasis": 2,
+      "english_pair": 2,
+      "already_in_glossary": -10,
+      "stop_noun": -5
+    }
+  },
+  "stop_nouns": [],
+  "stop_english": [],
+  "manual_adopt": [],
+  "manual_reject": []
+}

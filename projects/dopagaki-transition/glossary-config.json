@@ -1,0 +1,81 @@
+{
+  "version": "1.0.0",
+  "project_root": "../../../dopagaki-transition",
+  "morphology": {
+    "backend": "fugashi",
+    "dictionary": "unidic-lite",
+    "required": true
+  },
+  "corpus": {
+    "description": "Accepted Manuscript only — glossary terms must appear here",
+    "files": [
+      "manuscript/part01/ch02-dopamine-is-not-pleasure.md",
+      "manuscript/part01/ch03-exploration-in-information-flood.md",
+      "manuscript/part02/ch04-industrialization-of-exploration.md",
+      "manuscript/part02/ch05-skinner-box-planetary-scale.md",
+      "manuscript/part02/ch06-attention-capitalism.md",
+      "manuscript/part02/ch07-digital-capital-theory.md",
+      "manuscript/part02/ch09-attention-scarcity.md"
+    ]
+  },
+  "reference_catalogs": [
+    "ts/TS-CATALOG.md",
+    "adr/ADR-CATALOG.md",
+    "GLOSSARY.md"
+  ],
+  "output": "build/glossary/candidates-dopagaki.json",
+  "knowledge_filter": {
+    "enabled": false,
+    "mcp_server": "glossary-knowledge",
+    "domain": "attention-economics"
+  },
+  "scoring": {
+    "adopt_threshold": 5,
+    "hold_threshold": 3,
+    "weights": {
+      "in_ts_or_adr": 3,
+      "multi_chapter": 2,
+      "emphasis": 2,
+      "english_pair": 2,
+      "already_in_glossary": -10,
+      "stop_noun": -5
+    }
+  },
+  "stop_nouns": [
+    "こと", "もの", "ため", "場合", "部分", "状態", "問題", "構造", "社会", "人間",
+    "利用者", "企業", "情報", "環境", "世界", "時間", "結果", "意味", "価値", "活動",
+    "行動", "報酬", "快楽", "期待", "未来", "データ", "ユーザー", "プラットフォーム",
+    "デジタル", "スクロール", "アルゴリズム", "メカニズム", "プール", "明示化"
+  ],
+  "stop_english": [
+    "Ch", "Part", "Chapter", "Status", "Target", "Related", "Accepted", "Manuscript",
+    "The", "This", "However", "Industrial", "Society", "Value", "User", "Platform",
+    "Layer", "Part II", "Part I", "Part III", "Time", "TS", "ADR", "Capital",
+    "Capitalism", "Scarcity", "Exploration", "Dopagaki", "Dopamine", "Adaptation",
+    "Box", "Skinner", "Model", "Product", "Inflation", "Prediction", "Effective",
+    "Participation", "Variable", "Reward", "Great", "Inversion", "Definition",
+    "Allocation", "Meaning", "Market", "On", "Not", "Is"
+  ],
+  "manual_adopt": [
+    "探索",
+    "Attention Inflation",
+    "Attention Capacity",
+    "Attention Capture",
+    "Platform Capital",
+    "Participation Capital",
+    "Effective Population",
+    "Ontological Scarcity",
+    "Economic Access Scarcity",
+    "Cognitive Bandwidth",
+    "Variable Reward",
+    "Evolutionary Mismatch",
+    "進化的不一致",
+    "Skinner Box",
+    "スキナー箱",
+    "Participatory Resource",
+    "Behavioural Extraction Economy",
+    "行動採掘",
+    "ドーパミン"
+  ],
+  "manual_reject": ["TikTok", "SNS", "GAFAM", "Meta", "Google"]
+}
