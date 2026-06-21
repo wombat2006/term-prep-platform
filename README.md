@@ -1,85 +1,64 @@
 # term-prep-platform
 
-> **社内データを RAG に載せる前の前処理 — 用語抽出・ノイズ除去・PII/サニタイズを MCP で共通化**
+社内文書を RAG やボット辞書に載せる**前**の共通前処理を、MCP と CLI でまとめたリポジトリです。用語抽出・ノイズ除去・PII マスク・サニタイズを、複数プロジェクトで同じ仕組みに乗せます。
 
-**English:** MCP-based data prep for RAG — terminology extraction, noise filtering, and document cleanup, shared across repos.
+**English:** MCP-based data prep for RAG — shared terminology extraction, noise filtering, and document cleanup across repos.
 
-Repository:
-https://github.com/wombat2006/term-prep-platform
-
-Status:
-Initial extract from [dopagaki-transition](https://github.com/wombat2006/dopagaki-transition) (2026-06-21)
+リポジトリ: https://github.com/wombat2006/term-prep-platform  
+由来: [dopagaki-transition](https://github.com/wombat2006/dopagaki-transition) から分離（2026-06-21）
 
 ---
 
-## この PRJ が提供するもの
+## 概要
 
-**一言:** 社内データを RAG やボット辞書に載せる**前**の、共通前処理プラットフォーム（Prep Platform）。RAG 本体や Drive 連携は各 consumer PRJ が持ち、**PII 除去 → サニタイズ → 用語抽出 → ノイズ除去 → 用語レジストリ** までをここに集約する。
+このリポジトリは **Prep Platform**（前処理基盤）です。Google Drive や Markdown 原稿などの社内データを、各利用側リポジトリが取り込み、RAG 索引・用語集・ボット辞書へ渡す——その**手前**までを担当します。
 
-### 提供する
+具体的には、次の処理を MCP（Cursor から呼び出し）とバッチ CLI で共通化します。
 
-| 種類 | 内容 |
-|---|---|
-| **MCP サーバ**（Python / stdio） | PII · sanitize · extract · noise filter — Cursor から呼ぶ共通ツール |
-| **バッチ CLI** | `glossary_extractor.py` — Markdown corpus から adopt / hold 候補を出力 |
-| **設定・検証** | `glossary-config.json` + [JSON Schema](meta/schemas/glossary-config.schema.json) |
-| **governance テンプレ** | 問題・手段案・採択ログ（[meta/glossary-pipeline/](meta/glossary-pipeline/)） |
-| **consumer 向けサンプル** | [projects/](projects/) の config と [integration ドキュメント](docs/integrations/) |
+1. 個人情報の検出・マスク（PII）
+2. ポリシーに沿った redaction（sanitize）
+3. 専門用語候補の抽出（extract）
+4. 一般語とドメイン語の切り分け（noise filter）
+5. 用語レジストリの整備（term registry）
 
-出口は **term registry**（と adopt / hold 成果物）をハブに、各 PRJ の RAG index · glossary / bot dict · query expander へ渡す。
+**ここまでが本リポジトリの範囲**です。embedding、Vector Store、chunk 索引、`GLOSSARY.md` の最終採択、Drive 連携アプリ本体は、利用側リポジトリ側の責務です。
 
-### 提供しない
+設計と骨格は揃っていますが、MCP の多くはこれから実装する段階です。いま動いているのは Phase 0 の `glossary_extractor` と設定スキーマ検証、`glossary-knowledge` MCP の stub です。
 
-| 種類 | 所在 |
-|---|---|
-| 社内データ本体（corpus パス） | 各 consumer PRJ |
-| RAG（embedding · Vector Store · chunk 索引） | 各 consumer PRJ |
-| 人間が採択する正典（`GLOSSARY.md`、bot 辞書 JSON） | 各 consumer PRJ |
-| Google Drive 連携など ingest アプリ | 各 consumer PRJ（例: techdev-cursor の TypeScript） |
-
-**分担:** データの置き場と RAG の完成品は consumer、その**間の prep** が本 repo。
-
-### 実装の成熟度
-
-設計と骨格は揃っている。**独立 repo 化を見据えた scaffold** — 段階的に MCP と Core を育てる。
-
-| 領域 | 状態 |
-|---|---|
-| `glossary_extractor` + config schema | **動作中**（Phase 0） |
-| `glossary-knowledge` MCP | **stub** |
-| pii-guard · sanitize · term-extract · registry | planned |
-
-### 誰にどう言うか
-
-| 相手 | 説明 |
-|---|---|
-| 非エンジニア | 社内文書を AI 検索に載せる**前**の共通下ごしらえ。個人情報・ノイズを落とし、専門用語を整えて各 PRJ の RAG / 辞書に渡す |
-| 開発者 | consumer の `.cursor/mcp.json` から platform MCP を参照。config は `projects/<name>/glossary-config.json` で差し替え。TS の RAG コードは consumer に残し prep だけ Python MCP で共通化 |
-
-図解・UML: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
+アーキテクチャ図（Component / Sequence など）: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
 
 ---
 
-## 目指すフロー
+## 役割分担
 
-**社内データ → 前処理（本 repo）→ 用語レジストリ → RAG / 辞書 / クエリ拡張** を一貫させる。**Prep Platform として独立 repo 化する候補** — consumer PRJ は corpus・正典・RAG 索引を持ち、前処理ロジックはここに集約する。
+| | 本リポジトリ | 利用側リポジトリ |
+|---|---|---|
+| 例 | term-prep-platform | [techdev-cursor](https://github.com/wombat2006/techdev-cursor)、[dopagaki-transition](https://github.com/wombat2006/dopagaki-transition) |
+| 持つもの | MCP サーバ、抽出 CLI、設定スキーマ、governance テンプレ | corpus、正典、RAG 索引、ingest アプリ |
+| 接続 | `.cursor/mcp.json` から参照される | `projects/*/glossary-config.json` で設定を差し替え |
+
+本リポジトリが出力する adopt / hold JSON や（将来の）term registry を、各利用側が RAG・辞書・クエリ拡張に接続します。
+
+---
+
+## パイプライン
 
 ```mermaid
 flowchart LR
-  subgraph ingest ["Ingest — consumer PRJ"]
+  subgraph ingest ["取り込み — 利用側"]
     D[社内データ]
   end
-  subgraph prep ["Prep — term-prep-platform（本 repo）"]
-    PII[PII MCP]
-    SAN[sanitize MCP]
+  subgraph prep ["前処理 — 本 repo"]
+    PII[PII]
+    SAN[sanitize]
     EXT[extract]
-    NF[noise filter MCP]
+    NF[noise filter]
     REG[term registry]
   end
-  subgraph out ["Outputs — consumer PRJ"]
-    RAG[RAG index]
-    GLO[glossary / bot dict]
-    QX[query expander]
+  subgraph out ["出力 — 利用側"]
+    RAG[RAG 索引]
+    GLO[用語集 / bot 辞書]
+    QX[クエリ拡張]
   end
   D --> PII --> SAN --> EXT --> NF --> REG
   REG --> RAG
@@ -92,36 +71,31 @@ flowchart LR
   style ingest fill:#fafafa,stroke:#757575,color:#424242
 ```
 
-緑 = **本 repo が提供** · 青 / 灰 = **consumer PRJ が保持**
+緑が本リポジトリ、青・灰が利用側です。
 
-| ステージ | 本 repo の対応 | 状態 |
+| 段 | 本 repo の実装 | 状態 |
 |---|---|---|
-| PII MCP | [mcp/pii-guard/](mcp/pii-guard/) | planned |
-| sanitize MCP | [mcp/sanitize/](mcp/sanitize/) | planned |
-| extract | [mcp/term-extract/](mcp/term-extract/) · `scripts/glossary_extractor.py` | planned / 部分実装 |
-| noise filter MCP | [mcp/glossary-knowledge/](mcp/glossary-knowledge/) | stub |
-| term registry | `scripts/glossary/registry.py`（Phase 1 以降） | planned |
-| RAG index · glossary · query expander | 各 consumer PRJ（例: [techdev-cursor](projects/techdev-cursor/)） | **consumer 側** |
-
-詳細: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) · [meta/TO-BE-PLATFORM.md](meta/TO-BE-PLATFORM.md)
+| PII | [mcp/pii-guard/](mcp/pii-guard/) | 予定 |
+| sanitize | [mcp/sanitize/](mcp/sanitize/) | 予定 |
+| extract | [mcp/term-extract/](mcp/term-extract/) · `scripts/glossary_extractor.py` | 一部実装 |
+| noise filter | [mcp/glossary-knowledge/](mcp/glossary-knowledge/) | stub |
+| term registry | `scripts/glossary/registry.py` | Phase 1 以降 |
+| RAG · 辞書 · クエリ拡張 | 利用側 | — |
 
 ---
 
-## Consumers
+## 利用側リポジトリ
 
-**第 1 consumer:** [techdev-cursor](https://github.com/wombat2006/techdev-cursor) — Google Drive → RAG 前処理  
-**参考 consumer:** [dopagaki-transition](https://github.com/wombat2006/dopagaki-transition) — 研究原稿用語集
+| リポジトリ | 用途 | 設定 |
+|---|---|---|
+| [techdev-cursor](https://github.com/wombat2006/techdev-cursor) | Google Drive → RAG 前処理 | [projects/techdev-cursor/](projects/techdev-cursor/) |
+| [dopagaki-transition](https://github.com/wombat2006/dopagaki-transition) | 研究原稿の用語集 | [projects/dopagaki-transition/](projects/dopagaki-transition/) |
 
-| PRJ | Config |
-|---|---|
-| dopagaki-transition | [projects/dopagaki-transition/](projects/dopagaki-transition/) |
-| techdev-cursor | [projects/techdev-cursor/](projects/techdev-cursor/) |
-
-詳細: [docs/integrations/](docs/integrations/)
+連携手順: [docs/integrations/](docs/integrations/)
 
 ---
 
-## クイックスタート
+## はじめ方
 
 ```bash
 git clone https://github.com/wombat2006/term-prep-platform.git
@@ -131,10 +105,11 @@ source .venv/bin/activate
 python -m pip install -r requirements-dev.txt
 python -m pip install -r mcp/glossary-knowledge/requirements.txt
 
-# 形態素バックエンド確認
-python scripts/glossary_extractor.py --check --config projects/dopagaki-transition/glossary-config.json
+# 形態素エンジンと設定ファイルの確認
+python scripts/glossary_extractor.py --check \
+  --config projects/dopagaki-transition/glossary-config.json
 
-# MCP provider stub（pip 不要の部分）
+# MCP stub の動作確認
 cd mcp/glossary-knowledge && PYTHONPATH=. python -c "
 from glossary_knowledge_mcp.server import classify_term, list_providers
 print(list_providers())
@@ -144,58 +119,53 @@ print('OK:', r)
 "
 ```
 
-**System:** MeCab (`libmecab`) — AlmaLinux: `sudo dnf install mecab` only
+**OS 依存:** MeCab（`libmecab`）。AlmaLinux では `sudo dnf install mecab` のみで足ります（`mecab-devel` は不要）。
 
-### 注意点（Python / config）
+**実行時の注意**
 
-| 項目 | 内容 |
-|---|---|
-| **venv を使う** | クイックスタートどおり `.venv` を作り `source .venv/bin/activate` してから実行する。システムの `python3 -m pip install jsonschema` だけでは、別インタプリタで CLI を動かしたときに依存が見つからないことがある |
-| **依存の入れ方** | `requirements-dev.txt` 一括インストールを正とする（`jsonschema>=4.23.0` 含む）。個別 pip は dev 環境の再現性を崩しやすい |
-| **config 検証** | すべての実行で [meta/schemas/glossary-config.schema.json](meta/schemas/glossary-config.schema.json) を検証。**`--check` も対象** |
-| **Phase 0 config** | `filter` / `output`（adopt+hold オブジェクト）/ `knowledge_filter` を推奨。テンプレ: [projects/_template/](projects/_template/) |
-| **exit code** | `0` 成功 · `1` config/IO/**スキーマ不一致** · `2` fugashi / 辞書不可 |
-| **project_root** | config ファイル位置からの相対パス。corpus パスは `project_root` 基準 |
+- 必ず `.venv` を有効化してから CLI を動かしてください。システム Python にだけパッケージを入れても、venv 実行時には反映されません。
+- 依存関係は `requirements-dev.txt` 一括インストールを正とします（`jsonschema` 含む）。
+- `--config` で渡す JSON は起動時に [スキーマ](meta/schemas/glossary-config.schema.json) で検証されます（`--check` も同様）。
+- `project_root` は config ファイルからの相対パスです。corpus のパスもそこを基準に解決します。
 
-詳細: [meta/schemas/README.md](meta/schemas/README.md) · [scripts/README.md](scripts/README.md)
+くわしく: [scripts/README.md](scripts/README.md) · [meta/schemas/README.md](meta/schemas/README.md)
 
 ---
 
-## ディレクトリ
+## ディレクトリ構成
 
 ```text
 term-prep-platform/
-  mcp/                    … MCP servers（1 tool = 1 package）
+  mcp/                    … MCP サーバ（1 ツール = 1 パッケージ）
   scripts/                … glossary_extractor.py
-  meta/glossary-pipeline/ … 問題・手段案・採択（portable）
-  meta/schemas/           … glossary-config JSON Schema
+  meta/glossary-pipeline/ … 問題・手段案・採択（他 repo へ移植可）
+  meta/schemas/           … glossary-config の JSON Schema
   meta/TO-BE-PLATFORM.md  … ロードマップ
-  projects/               … consumer 別 config サンプル
-  docs/                   … アーキテクチャ・連携
+  projects/               … 利用側ごとの config サンプル
+  docs/                   … アーキテクチャ・連携ドキュメント
 ```
 
 ---
 
-## MCP（現状）
+## MCP サーバ（現状）
 
-パイプライン順（[目指すフロー](#目指すフロー)）:
+パイプライン順:
 
-| Server | Flow stage | Status | Tools |
+| サーバ | 段 | 状態 | 主なツール |
 |---|---|---|---|
-| [pii-guard](mcp/pii-guard/) | PII | planned | — |
-| [sanitize](mcp/sanitize/) | sanitize | planned | — |
-| term-extract | extract | planned | — |
-| [glossary-knowledge](mcp/glossary-knowledge/) | noise filter | **stub** (NullProvider) | `classify_term`, `classify_batch`, … |
+| [pii-guard](mcp/pii-guard/) | PII | 予定 | — |
+| [sanitize](mcp/sanitize/) | sanitize | 予定 | — |
+| term-extract | extract | 予定 | — |
+| [glossary-knowledge](mcp/glossary-knowledge/) | noise filter | stub | `classify_term`, `classify_batch` など |
 
 ---
 
-## 関連
+## 関連ドキュメント
 
-- [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — 提供範囲 · UML（Component / Deployment / Sequence）
-- [meta/schemas/README.md](meta/schemas/README.md) — config スキーマ・検証の注意点
-- [meta/glossary-pipeline/README.md](meta/glossary-pipeline/README.md) — 移植・ governance
-- [research-log/RL-20260621-knowledge-filter-mcp.md](research-log/RL-20260621-knowledge-filter-mcp.md) — MCP 方針（closed）
-- Origin: dopagaki-transition @ `5306a8b`
+- [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — 提供範囲と UML 図
+- [meta/TO-BE-PLATFORM.md](meta/TO-BE-PLATFORM.md) — 技術ロードマップ
+- [meta/glossary-pipeline/README.md](meta/glossary-pipeline/README.md) — governance の移植手順
+- [research-log/RL-20260621-knowledge-filter-mcp.md](research-log/RL-20260621-knowledge-filter-mcp.md) — Knowledge Filter MCP 方針
 
 ---
 
