@@ -7,8 +7,20 @@
     "required": true
   },
   "corpus": {
-    "description": "Docs synced from Google Drive — set files when mirror path is ready",
-    "files": []
+    "description": "In-repo platform docs (interim until Google Drive local mirror path is set)",
+    "files": [
+      "AGENTS.md",
+      "README.md",
+      "docs/WALL_BOUNCE_SYSTEM.md",
+      "docs/ARCHITECTURE.md",
+      "docs/MCP_SERVICES.md",
+      "docs/RAG_SETUP_GUIDE.md",
+      "docs/ANTIGRAVITY_CLI_MIGRATION.md",
+      "docs/PROVIDER_INTEGRATION_BACKLOG.md",
+      "docs/FORK_CURSOR.md",
+      "docs/DEVELOPMENT_GUIDE.md",
+      "meta/TO-BE-GLOSSARY-PIPELINE.md"
+    ]
   },
   "reference_catalogs": [
     "config/fork/devassist-dictionary-v0.json",
