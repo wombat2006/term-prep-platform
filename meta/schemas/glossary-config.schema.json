@@ -1,0 +1,140 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/wombat2006/term-prep-platform/meta/schemas/glossary-config.schema.json",
+  "title": "glossary-config",
+  "description": "Configuration for scripts/glossary_extractor.py (Phase 0+)",
+  "type": "object",
+  "required": [
+    "version",
+    "project_root",
+    "morphology",
+    "corpus",
+    "scoring"
+  ],
+  "additionalProperties": true,
+  "properties": {
+    "$comment": { "type": "string" },
+    "version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$"
+    },
+    "project_root": {
+      "type": "string",
+      "minLength": 1
+    },
+    "morphology": {
+      "type": "object",
+      "required": ["backend", "dictionary"],
+      "additionalProperties": false,
+      "properties": {
+        "backend": { "const": "fugashi" },
+        "dictionary": {
+          "type": "string",
+          "enum": ["unidic-lite", "unidic_lite", "unidic", "ipadic", "ipadic-utf8"]
+        },
+        "required": { "type": "boolean" }
+      }
+    },
+    "corpus": {
+      "type": "object",
+      "required": ["files"],
+      "additionalProperties": false,
+      "properties": {
+        "description": { "type": "string" },
+        "files": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "reference_catalogs": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "filter": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "seed_first": { "type": "boolean" },
+        "min_morph_freq": { "type": "integer", "minimum": 0 },
+        "min_chapters": { "type": "integer", "minimum": 0 },
+        "max_candidates_output": { "type": "integer", "minimum": 1 },
+        "emit_reject": { "type": "boolean" }
+      }
+    },
+    "knowledge_filter": {
+      "type": "object",
+      "required": ["enabled"],
+      "additionalProperties": false,
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "mcp_server": { "type": "string", "minLength": 1 },
+        "transport": { "type": "string", "enum": ["stdio"] },
+        "domain": { "type": "string", "minLength": 1 },
+        "batch_size": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "output": {
+      "oneOf": [
+        { "type": "string", "minLength": 1 },
+        {
+          "type": "object",
+          "required": ["adopt", "hold"],
+          "additionalProperties": false,
+          "properties": {
+            "registry": { "type": "string", "minLength": 1 },
+            "adopt": { "type": "string", "minLength": 1 },
+            "hold": { "type": "string", "minLength": 1 },
+            "reject": { "type": "string", "minLength": 1 },
+            "legacy_candidates": { "type": "string", "minLength": 1 }
+          }
+        }
+      ]
+    },
+    "scoring": {
+      "type": "object",
+      "required": ["adopt_threshold", "hold_threshold", "weights"],
+      "additionalProperties": false,
+      "properties": {
+        "adopt_threshold": { "type": "integer" },
+        "hold_threshold": { "type": "integer" },
+        "weights": {
+          "type": "object",
+          "required": [
+            "in_ts_or_adr",
+            "multi_chapter",
+            "emphasis",
+            "english_pair",
+            "already_in_glossary",
+            "stop_noun"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "in_ts_or_adr": { "type": "integer" },
+            "multi_chapter": { "type": "integer" },
+            "emphasis": { "type": "integer" },
+            "english_pair": { "type": "integer" },
+            "already_in_glossary": { "type": "integer" },
+            "stop_noun": { "type": "integer" }
+          }
+        }
+      }
+    },
+    "stop_nouns": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "stop_english": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "manual_adopt": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "manual_reject": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    }
+  }
+}

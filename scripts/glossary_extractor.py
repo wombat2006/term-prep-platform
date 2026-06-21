@@ -176,9 +176,32 @@ def detect_lang(term: str) -> str:
     return "ja"
 
 
+_SCHEMA_PATH = Path(__file__).resolve().parents[1] / "meta" / "schemas" / "glossary-config.schema.json"
+
+
+def validate_config(config: dict, *, schema_path: Path | None = None) -> None:
+    try:
+        import jsonschema
+        from jsonschema.exceptions import ValidationError
+    except ImportError as exc:
+        raise RuntimeError(
+            "jsonschema is not installed; run: python -m pip install -r requirements-dev.txt"
+        ) from exc
+
+    path = schema_path or _SCHEMA_PATH
+    with path.open(encoding="utf-8") as fh:
+        schema = json.load(fh)
+    try:
+        jsonschema.validate(instance=config, schema=schema)
+    except ValidationError:
+        raise
+
+
 def load_config(path: Path) -> dict:
     with path.open(encoding="utf-8") as fh:
-        return json.load(fh)
+        config = json.load(fh)
+    validate_config(config)
+    return config
 
 
 def project_root_from_config(config_path: Path, config: dict) -> Path:
@@ -516,6 +539,12 @@ def run(config_path: Path) -> dict:
 
 
 def main(argv: list[str] | None = None) -> int:
+    try:
+        from jsonschema.exceptions import ValidationError
+    except ImportError:
+        class ValidationError(Exception):  # noqa: N806
+            pass
+
     parser = argparse.ArgumentParser(description=__doc__)
     default_config = Path(__file__).resolve().parents[1] / "meta" / "glossary-config.json"
     parser.add_argument("--config", type=Path, default=default_config)
@@ -535,6 +564,9 @@ def main(argv: list[str] | None = None) -> int:
             print(f"FAIL: {exc}", file=sys.stderr)
             print(MORPHOLOGY_ERROR, file=sys.stderr)
             return 2
+        except ValidationError as exc:
+            print(f"Config schema error: {exc}", file=sys.stderr)
+            return 1
 
     try:
         result = run(args.config)
@@ -542,6 +574,9 @@ def main(argv: list[str] | None = None) -> int:
         print(f"Morphology error: {exc}", file=sys.stderr)
         print(MORPHOLOGY_ERROR, file=sys.stderr)
         return 2
+    except ValidationError as exc:
+        print(f"Config schema error: {exc}", file=sys.stderr)
+        return 1
     except (FileNotFoundError, json.JSONDecodeError, KeyError) as exc:
         print(f"Error: {exc}", file=sys.stderr)
         return 1

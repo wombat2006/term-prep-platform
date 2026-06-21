@@ -91,6 +91,19 @@ print('OK:', r)
 
 **System:** MeCab (`libmecab`) — AlmaLinux: `sudo dnf install mecab` only
 
+### 注意点（Python / config）
+
+| 項目 | 内容 |
+|---|---|
+| **venv を使う** | クイックスタートどおり `.venv` を作り `source .venv/bin/activate` してから実行する。システムの `python3 -m pip install jsonschema` だけでは、別インタプリタで CLI を動かしたときに依存が見つからないことがある |
+| **依存の入れ方** | `requirements-dev.txt` 一括インストールを正とする（`jsonschema>=4.23.0` 含む）。個別 pip は dev 環境の再現性を崩しやすい |
+| **config 検証** | すべての実行で [meta/schemas/glossary-config.schema.json](meta/schemas/glossary-config.schema.json) を検証。**`--check` も対象** |
+| **Phase 0 config** | `filter` / `output`（adopt+hold オブジェクト）/ `knowledge_filter` を推奨。テンプレ: [projects/_template/](projects/_template/) |
+| **exit code** | `0` 成功 · `1` config/IO/**スキーマ不一致** · `2` fugashi / 辞書不可 |
+| **project_root** | config ファイル位置からの相対パス。corpus パスは `project_root` 基準 |
+
+詳細: [meta/schemas/README.md](meta/schemas/README.md) · [scripts/README.md](scripts/README.md)
+
 ---
 
 ## ディレクトリ
@@ -100,6 +113,7 @@ term-prep-platform/
   mcp/                    … MCP servers（1 tool = 1 package）
   scripts/                … glossary_extractor.py
   meta/glossary-pipeline/ … 問題・手段案・採択（portable）
+  meta/schemas/           … glossary-config JSON Schema
   meta/TO-BE-PLATFORM.md  … ロードマップ
   projects/               … consumer 別 config サンプル
   docs/                   … アーキテクチャ・連携
@@ -133,6 +147,7 @@ term-prep-platform/
 
 ## 関連
 
+- [meta/schemas/README.md](meta/schemas/README.md) — config スキーマ・検証の注意点
 - [meta/glossary-pipeline/README.md](meta/glossary-pipeline/README.md) — 移植・ governance
 - [research-log/RL-20260621-knowledge-filter-mcp.md](research-log/RL-20260621-knowledge-filter-mcp.md) — MCP 方針（closed）
 - Origin: dopagaki-transition @ `5306a8b`

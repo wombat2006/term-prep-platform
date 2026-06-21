@@ -161,7 +161,9 @@ Consumers synced: **dopagaki-transition**, **techdev-cursor** (platform config +
 | T1-1 | **`scripts/glossary/` パッケージ化** — 現 `glossary_extractor.py` から logic を移動 | 新 pkg + 薄い CLI | CLI 引数・exit code 不変 |
 | T1-2 | **`morphology.py`** — fugashi + 辞書解決を独立 | glossary/morphology.py | `--check` が pkg 経由で動作 |
 | T1-3 | **`writers.py`** — JSON/JSONL 出力を writer 戦略化 | glossary/writers.py | adopt/hold/reject 切替 |
-| T1-4 | **config スキーマ** — `filter`, `output` 節を schema に反映 | meta/schemas/ | 設定ミスを早期検出 |
+| T1-4 | **config スキーマ** — `filter`, `output` 節を schema に反映 | meta/schemas/ | 設定ミスを早期検出 | **done** |
+
+実装: [meta/schemas/glossary-config.schema.json](../schemas/glossary-config.schema.json) · 注意点 [README](../schemas/README.md) · CLI `load_config()` で検証（`--check` 含む）
 
 ### Phase 2 — 縛り強化（Mid — Glossary 用途）
 

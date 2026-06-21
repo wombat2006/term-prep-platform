@@ -75,6 +75,17 @@ term-prep-platform  （Prep Platform — 独立 repo 候補）
 
 ---
 
+## Dev / config 注意点
+
+| 項目 | 内容 |
+|---|---|
+| Python 環境 | repo ルート `.venv` + `requirements-dev.txt`（`jsonschema` 含む）。システム Python への ad-hoc pip だけでは CLI/MCP で依存不一致になりうる |
+| Config 検証 | `projects/*/glossary-config.json` は [meta/schemas/glossary-config.schema.json](../meta/schemas/glossary-config.schema.json) で起動時検証（`--check` 含む） |
+| Config 編集 | 形式変更時は schema → テンプレ → consumer config の順で揃える |
+| 詳細 | [meta/schemas/README.md](../meta/schemas/README.md) · [scripts/README.md](../scripts/README.md) |
+
+---
+
 ## Reuse rules
 
 | Share in platform | Keep in consumer |
@@ -87,6 +98,7 @@ term-prep-platform  （Prep Platform — 独立 repo 候補）
 
 ## References
 
+- [meta/schemas/README.md](../meta/schemas/README.md) — config schema・検証注意点
 - [techdev-cursor integration](integrations/techdev-cursor.md)
 - [dopagaki-transition integration](integrations/dopagaki-transition.md)
 - [TO-BE-PLATFORM.md](../meta/TO-BE-PLATFORM.md)

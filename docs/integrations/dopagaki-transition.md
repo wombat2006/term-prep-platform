@@ -24,7 +24,7 @@ Research manuscript glossary — extract terms from Accepted chapters → human 
 
 ## Config
 
-[projects/dopagaki-transition/glossary-config.json](../projects/dopagaki-transition/glossary-config.json)
+[projects/dopagaki-transition/glossary-config.json](../projects/dopagaki-transition/glossary-config.json) — **Phase 0** schema（起動時に [JSON Schema](../schemas/glossary-config.schema.json) で検証）。
 
 **Note:** `project_root` points at dopagaki repo when running extractor:
 
@@ -35,6 +35,17 @@ python scripts/glossary_extractor.py \
 ```
 
 Adjust `project_root` in config if layout differs.
+
+### Config 注意点
+
+| 項目 | 内容 |
+|---|---|
+| 検証 | platform の `glossary_extractor.py` が schema 検証 — 不一致は exit `1` |
+| 依存 | platform `.venv` + `pip install -r requirements-dev.txt`（`jsonschema` 含む） |
+| 出力 | `output.adopt` / `output.hold` を Git 追跡。reject は `emit_reject: true` 時のみ |
+| テンプレ | [projects/_template/glossary-config.json](../../projects/_template/glossary-config.json) |
+
+詳細: [meta/schemas/README.md](../../meta/schemas/README.md)
 
 ---
 

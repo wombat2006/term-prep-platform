@@ -2,7 +2,7 @@
 
 Consumer: [techdev-cursor](https://github.com/wombat2006/techdev-cursor)
 
-Phase 0: adopt/hold output split, `filter` / `output` / `knowledge_filter` schema aligned with dopagaki-transition.
+Phase 0: adopt/hold output split, `filter` / `output` / `knowledge_filter` schema aligned with dopagaki-transition. Config は起動時に platform schema で検証（[注意点](../../meta/schemas/README.md)）。
 
 Fill `corpus.files` when Google Drive sync local path is defined.
 

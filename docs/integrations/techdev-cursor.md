@@ -26,11 +26,22 @@ Also: expand [devassist-dictionary-v0.json](https://github.com/wombat2006/techde
 
 ## Config
 
-[projects/techdev-cursor/glossary-config.json](../projects/techdev-cursor/glossary-config.json) — **Phase 0** schema (`filter` / `output` / `knowledge_filter`; adopt/hold split).
+[projects/techdev-cursor/glossary-config.json](../projects/techdev-cursor/glossary-config.json) — **Phase 0** schema (`filter` / `output` / `knowledge_filter`; adopt/hold split). 起動時に [JSON Schema](../schemas/glossary-config.schema.json) で検証。
 
 Consumer copy in repo: [techdev-cursor/meta/glossary-config.json](https://github.com/wombat2006/techdev-cursor/blob/master/meta/glossary-config.json)
 
 Set `corpus.files` when Drive sync local mirror path is fixed.
+
+### Config 注意点
+
+| 項目 | 内容 |
+|---|---|
+| 二重管理 | platform `projects/techdev-cursor/` は mirror。本番 `--config` は consumer の `meta/glossary-config.json` を指す |
+| 検証 | どちらの config も同じ schema。編集後は `--check` で確認 |
+| 依存 | platform 側で `.venv` を使い `requirements-dev.txt` をインストール（システム Python 単体 pip 不可） |
+| schema 更新 | platform で config 形式を変えるときは `meta/schemas/` と consumer config を **同 PR / 同タイミング** で揃える |
+
+詳細: [meta/schemas/README.md](../../meta/schemas/README.md)
 
 ### Output layout (consumer repo)
 

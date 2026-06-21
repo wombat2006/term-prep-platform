@@ -43,6 +43,10 @@ meta/glossary-pipeline/
   mcp/                   … Knowledge Filter MCP 仕様（portable）
   glossary-config.template.json
 
+meta/schemas/              … glossary-config JSON Schema（CLI 起動時検証）
+  README.md
+  glossary-config.schema.json
+
 mcp/                     … MCP implementations（platform ルート）
   glossary-knowledge/
   term-extract/ …
@@ -52,7 +56,7 @@ mcp/                     … MCP implementations（platform ルート）
 scripts/
   glossary_extractor.py  … CLI 入口（別途コピー）
   README.md              … セットアップ
-requirements-dev.txt     … fugashi + unidic-lite
+requirements-dev.txt     … fugashi + unidic-lite + jsonschema
 ```
 
 ---
@@ -76,7 +80,8 @@ cp meta/glossary-config.template.json /path/to/other-project/meta/glossary-confi
 
 #  tooling
 cp scripts/glossary_extractor.py /path/to/other-project/scripts/
-cp requirements-dev.txt /path/to/other-project/   # または追記
+cp -r meta/schemas /path/to/other-project/meta/
+cp requirements-dev.txt /path/to/other-project/   # または追記（jsonschema 含む）
 
 #  optional
 cp meta/TO-BE-PLATFORM.md /path/to/other-project/meta/
@@ -85,8 +90,11 @@ cp meta/TO-BE-PLATFORM.md /path/to/other-project/meta/
 移植後:
 
 1. `glossary-config.json` の `corpus.files` をその PRJ の Markdown に合わせる
-2. `PROBLEMS.md` に PRJ 固有の問題を追加
-3. `options/` に手段案を書き、採択したら `DECISIONS.md` へ
+2. **`python scripts/glossary_extractor.py --check --config …` で schema + 形態素を確認**
+3. `PROBLEMS.md` に PRJ 固有の問題を追加
+4. `options/` に手段案を書き、採択したら `DECISIONS.md` へ
+
+**注意:** `glossary_extractor.py` だけコピーして schema / `jsonschema` を忘れると、起動時に `Config schema error` または ImportError になる。[meta/schemas/README.md](../schemas/README.md) 参照。
 
 ---
 
@@ -123,6 +131,7 @@ OPTIONS.md インデックス更新
 ## 関連
 
 - [TO-BE-PLATFORM.md](../TO-BE-PLATFORM.md) — 技術 TO-BE・Phase ロードマップ
+- [meta/schemas/README.md](../schemas/README.md) — config JSON Schema・検証注意点
 - [glossary-config.json](../glossary-config.json) — 本 PRJ の実行時設定
 - [scripts/README.md](../../scripts/README.md) — fugashi セットアップ
 
