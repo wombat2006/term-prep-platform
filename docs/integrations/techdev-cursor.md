@@ -6,13 +6,24 @@ Consumer: [wombat2006/techdev-cursor](https://github.com/wombat2006/techdev-curs
 
 ## Role in platform flow
 
-techdev-cursor は **Outputs** 側 — ingest（Google Drive）と RAG index / bot dict / query expander を保持し、prep は本 repo の MCP + CLI を参照する。
+techdev-cursor は **Outputs** 側 — ingest（Google Drive）と RAG index / bot dict / query expander を**保持**し、prep は本 repo の MCP + CLI を**参照**する。
 
-```text
-Drive（社内データ）→ [prep: term-prep-platform] → term registry → RAG index · devassist-dictionary · query expander
+```mermaid
+flowchart LR
+  subgraph consumer ["techdev-cursor — consumer"]
+    Drive[Google Drive] --> RAG[RAG · devassist-dict · QX]
+  end
+  subgraph platform ["term-prep-platform — prep のみ"]
+    PREP[MCP + glossary_extractor]
+  end
+  Drive --> PREP
+  PREP -->|registry · adopt/hold| RAG
+
+  style platform fill:#e8f5e9,stroke:#2e7d32
+  style consumer fill:#e3f2fd,stroke:#1565c0
 ```
 
-図解: [ARCHITECTURE.md](../ARCHITECTURE.md)
+提供範囲: [ARCHITECTURE.md](../ARCHITECTURE.md#scope--この-prj-が提供するもの)
 
 ---
 

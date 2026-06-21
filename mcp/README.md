@@ -1,6 +1,9 @@
 # MCP Servers
 
-Shared stdio MCP tools for data prep before RAG ingest.
+Shared stdio MCP tools for **data prep before RAG ingest** — part of [term-prep-platform](../README.md) Prep layer.
+
+**本 repo が MCP で提供するもの:** PII 検出 · ポリシー redaction · 用語抽出 · ノイズ分類（Cursor / CI から stdio で呼ぶ）。  
+**提供しない:** RAG indexing、corpus 保管、辞書の正典。
 
 Register in consumer `.cursor/mcp.json` alongside project-specific MCPs (e.g. techsapo-providers).
 
@@ -12,11 +15,19 @@ Prep Platform パイプライン上、MCP は **社内データ ingest 後・ter
 
 ```mermaid
 flowchart LR
-  D[社内データ] --> PII[PII MCP] --> SAN[sanitize MCP] --> EXT[extract] --> NF[noise filter MCP] --> REG[term registry]
-  REG --> RAG[RAG index]
-  REG --> GLO[glossary / bot dict]
-  REG --> QX[query expander]
-  QX --> RAG
+  subgraph consumer ["consumer PRJ"]
+    D[社内データ]
+    RAG[RAG · glossary · QX]
+  end
+  subgraph platform ["term-prep-platform — mcp/"]
+    PII[PII MCP] --> SAN[sanitize MCP] --> EXT[extract] --> NF[noise filter MCP]
+  end
+  D --> PII
+  NF --> REG[term registry]
+  REG --> RAG
+
+  style platform fill:#e8f5e9,stroke:#2e7d32
+  style consumer fill:#e3f2fd,stroke:#1565c0
 ```
 
 | MCP | Directory | Flow stage |

@@ -6,6 +6,8 @@ term-prep-platform
 Schema:
 [glossary-config.schema.json](./glossary-config.schema.json)
 
+Platform scope（本 repo が RAG 本体を提供しない理由含む）: [docs/ARCHITECTURE.md](../../docs/ARCHITECTURE.md#scope--この-prj-が提供するもの)
+
 ---
 
 ## 役割

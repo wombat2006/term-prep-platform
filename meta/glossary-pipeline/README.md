@@ -18,13 +18,24 @@ Portable scaffold — **canonical home** for glossary-pipeline governance
 - 本リポジトリだけでなく **他 PRJ・専門用語辞典 PRJ** へコピーして使う
 - [TO-BE-PLATFORM.md](../TO-BE-PLATFORM.md) は方向性、**本ディレクトリは手段の検討ログ**
 
+**platform 全体の提供範囲**（RAG 本体は consumer）: [README.md](../../README.md#この-prj-が提供するもの) · [ARCHITECTURE.md](../../docs/ARCHITECTURE.md)
+
 ### Prep Platform 上の位置
 
 ```mermaid
 flowchart LR
-  D[社内データ] --> PII --> SAN --> EXT[extract] --> NF[noise filter MCP] --> REG[term registry]
-  REG --> RAG & GLO & QX
-  QX --> RAG
+  subgraph consumer ["consumer PRJ"]
+    D[社内データ]
+    OUT[RAG · glossary · QX]
+  end
+  subgraph prep ["term-prep-platform"]
+    EXT[extract] --> NF[noise filter MCP] --> REG[term registry]
+  end
+  D --> EXT
+  REG --> OUT
+
+  style prep fill:#e8f5e9,stroke:#2e7d32
+  style consumer fill:#e3f2fd,stroke:#1565c0
 ```
 
 本ディレクトリが扱うのは主に **extract · noise filter（Knowledge Filter MCP）· registry 周辺** の governance（P-001–P-006）。PII / sanitize は [mcp/](../../mcp/README.md) 側、RAG / 辞書 / query expander は consumer 側。

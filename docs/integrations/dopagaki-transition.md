@@ -6,13 +6,24 @@ Consumer: [wombat2006/dopagaki-transition](https://github.com/wombat2006/dopagak
 
 ## Role in platform flow
 
-dopagaki-transition は **Outputs: glossary** 側 — 原稿 MD を ingest し、prep 後の adopt/hold を人間が `GLOSSARY.md` に反映する。
+dopagaki-transition は **Outputs: glossary** 側 — 原稿 MD を ingest し、prep 後の adopt/hold を人間が `GLOSSARY.md` に反映する。**RAG は対象外**（用語集用途 A）。
 
-```text
-原稿 MD（社内データ）→ [prep: term-prep-platform] → term registry → GLOSSARY.md
+```mermaid
+flowchart LR
+  subgraph consumer ["dopagaki-transition — consumer"]
+    MS[原稿 MD] --> GLO[GLOSSARY.md]
+  end
+  subgraph platform ["term-prep-platform — prep のみ"]
+    PREP[glossary_extractor]
+  end
+  MS --> PREP
+  PREP -->|adopt/hold| GLO
+
+  style platform fill:#e8f5e9,stroke:#2e7d32
+  style consumer fill:#e3f2fd,stroke:#1565c0
 ```
 
-図解: [ARCHITECTURE.md](../ARCHITECTURE.md)
+提供範囲: [ARCHITECTURE.md](../ARCHITECTURE.md#scope--この-prj-が提供するもの)
 
 ---
 

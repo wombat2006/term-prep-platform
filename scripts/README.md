@@ -7,13 +7,24 @@ term-prep-platform
 
 ## Position in target flow
 
-`glossary_extractor.py` は Prep Platform パイプラインの **extract → noise filter → term registry** 区間を担う CLI 入口（PII / sanitize は upstream MCP、registry 以降の RAG / 辞書 / query expander は consumer）。
+`glossary_extractor.py` は Prep Platform の **extract → noise filter → term registry** 区間の CLI 入口。PII / sanitize は upstream MCP、RAG / 辞書 / query expander は **consumer が保持**。
 
-```text
-社内データ → [PII MCP] → [sanitize MCP] → glossary_extractor → term registry → RAG / glossary / query expander
+```mermaid
+flowchart LR
+  subgraph consumer ["consumer PRJ"]
+    D[corpus] --> OUT[RAG · glossary · QX]
+  end
+  subgraph platform ["term-prep-platform"]
+    CLI[glossary_extractor] --> REG[term registry · adopt/hold]
+  end
+  D --> CLI
+  REG --> OUT
+
+  style platform fill:#e8f5e9,stroke:#2e7d32
+  style consumer fill:#e3f2fd,stroke:#1565c0
 ```
 
-図解: [docs/ARCHITECTURE.md](../docs/ARCHITECTURE.md)
+提供範囲: [docs/ARCHITECTURE.md](../docs/ARCHITECTURE.md) · [README.md](../README.md#この-prj-が提供するもの)
 
 ---
 

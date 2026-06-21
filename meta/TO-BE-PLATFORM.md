@@ -16,23 +16,36 @@ Related:
 
 ---
 
+## 提供範囲（Scope）
+
+| | 本 repo | consumer PRJ |
+|---|---|---|
+| 提供 | MCP · CLI · config schema · governance | — |
+| 不提供 | RAG · corpus 本体 · GLOSSARY 正典 · ingest app | それらを保持 |
+
+**一言:** RAG の**前**まで。term registry（+ adopt/hold）を出口に、consumer の RAG / 辞書 / query expander へ fan-out。
+
+UML: [docs/ARCHITECTURE.md](../docs/ARCHITECTURE.md)（Component · Deployment · Sequence）
+
+---
+
 ## エンドツーエンド目標フロー
 
 **Prep Platform として独立 repo 化する候補。** 社内データを consumer が ingest し、本 repo が前処理パイプラインを提供、**term registry** をハブに RAG・辞書・クエリ拡張へ fan-out する。
 
 ```mermaid
 flowchart LR
-  subgraph ingest [Ingest]
+  subgraph ingest ["Ingest — consumer"]
     D[社内データ]
   end
-  subgraph prep [Prep Platform — 独立 repo 候補]
+  subgraph prep ["Prep — term-prep-platform"]
     PII[PII MCP]
     SAN[sanitize MCP]
     EXT[extract]
     NF[noise filter MCP]
     REG[term registry]
   end
-  subgraph out [Outputs]
+  subgraph out ["Outputs — consumer"]
     RAG[RAG index]
     GLO[glossary / bot dict]
     QX[query expander]
@@ -42,6 +55,10 @@ flowchart LR
   REG --> GLO
   REG --> QX
   QX --> RAG
+
+  style prep fill:#e8f5e9,stroke:#2e7d32
+  style out fill:#e3f2fd,stroke:#1565c0
+  style ingest fill:#fafafa,stroke:#757575
 ```
 
 | フロー上の段 | 本 repo | 備考 |
