@@ -218,6 +218,7 @@ term-prep-platform/
 
 - [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — 提供範囲と UML 図
 - [docs/IMPLEMENTATION-COMPARISON.md](docs/IMPLEMENTATION-COMPARISON.md) — Phase · connector · AWS（EC2/EKS/ECS/SageMaker）比較
+- [docs/IAC.md](docs/IAC.md) — **IaC 議論まとめ** · Terraform 方針 · consumer/API 接続 · KMS · TF vs CFN
 - [meta/TO-BE-PLATFORM.md](meta/TO-BE-PLATFORM.md) — AS-IS / To-Be · ロードマップ
 - [meta/TODO.md](meta/TODO.md) — 実行チェックリスト
 - [meta/glossary-pipeline/PROBLEMS.md](meta/glossary-pipeline/PROBLEMS.md#p-007) — Source connector 課題

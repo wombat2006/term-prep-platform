@@ -14,6 +14,7 @@ Living document
 | ID | 日付 | Problem | 採択案 | 実装 |
 |---|---|---|---|---|
 | D-002 | 2026-06-21 | P-002 | O-P002-004（MCP stub） | closed — [mcp/glossary-knowledge/](../../mcp/glossary-knowledge/) |
+| D-003 | 2026-06-21 | （ops） | Terraform（AWS 第一） | planned — [docs/IAC.md](../../docs/IAC.md) |
 
 ---
 
@@ -80,3 +81,39 @@ Living document
 **影響:** `mcp/glossary-knowledge/`, TO-BE Phase 2.5
 
 **必須併用:** O-P002-001 registry seed-first
+
+---
+
+## D-003 {#d-003}
+
+**日付:** 2026-06-21
+
+**Problem:** batch prep 用 infra（S3 mirror · IAM · EC2/ECS）の再現性とレビュー可能性
+
+**採択:** **Terraform**（HCL）を IaC の正とする。配置は `infra/terraform/`。AWS 第一 · Cloudflare は Phase 3+ ops で optional。
+
+**棄却:**
+
+- **AWS CloudFormation** — AWS 単体 · 本 PRJ は CF 代替経路あり · [検証](IAC.md#terraform-vs-cloudformation-検証)
+- AWS CDK · Pulumi（当面）
+- 手動コンソールのみ運用（本番 S3/IAM）
+
+**理由:**
+
+- S3 + IAM + batch compute の provider・事例が豊富
+- plan/apply で infra diff を PR レビュー可能
+- consumer 増加時にモジュール変数でプレフィックス分離しやすい
+- **Cloudflare（R2 / Containers）を同一 IaC で扱える** — CFN は非対応
+
+**段階投入:**
+
+1. Phase 0.5 — S3 バケット + IAM + KMS/Secrets（prep batch 最小権限 · 外部 API key 基盤）
+2. Phase 3+ ops — EC2 launch template または ECS（定期 ingest 定常化後）
+3. Phase 3+（任意）— API Gateway（HTTP で prep トリガーする要件が出たら）
+4. Phase 3+ — **Amazon SES**（batch 完了/失敗 · レビュー依頼メール通知）
+
+**棄却の補足:** CloudFormation — [IAC.md §7](../../docs/IAC.md#7-terraform-vs-cloudformation-検証) · KMS/SES/API Gateway — [IAC.md §5](../../docs/IAC.md#5-aws-サービス選定--kms--api-gateway--ses--cloudformation)
+
+**実装:** planned — [docs/IAC.md](../../docs/IAC.md) · [infra/terraform/README.md](../../infra/terraform/README.md)
+
+**影響:** `infra/terraform/` · ROADMAP-AND-COSTS · IMPLEMENTATION-COMPARISON · Phase 0.5 TODO

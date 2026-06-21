@@ -18,7 +18,7 @@
 
 **成熟度:** 設計・骨格は揃った scaffold。Phase 0（extractor + schema）は動作中。Phase 0.5 は governance 起票済み・未実装。
 
-**実行方針（計画）:** 大規模 corpus は **batch job 優先**（LLM / Workers AI は Batch API）。mirror は **S3 または R2** · compute は **EC2 Spot / EKS または Cloudflare Containers** — [ROADMAP-AND-COSTS.md](ROADMAP-AND-COSTS.md)。
+**実行方針（計画）:** 大規模 corpus は **batch job 優先**（LLM / Workers AI は Batch API）。mirror は **S3 または R2** · compute は **EC2 Spot / EKS または Cloudflare Containers** · **IaC は Terraform**（`infra/terraform/`）— [ROADMAP-AND-COSTS.md](ROADMAP-AND-COSTS.md) · [IAC.md](IAC.md)。
 
 ---
 
@@ -220,6 +220,7 @@ consumer repos/              ← 本 repo の外
 - [README.md](../README.md) — 提供範囲サマリ
 - [ROADMAP-AND-COSTS.md](ROADMAP-AND-COSTS.md) — **今後の方向性 · 課題→ツール対応 · コスト概算**（計画のみ）
 - [IMPLEMENTATION-COMPARISON.md](IMPLEMENTATION-COMPARISON.md) — **実装比較**（難易度 · 実現性 · コスト · メリデメ · AWS/CF）
+- [IAC.md](IAC.md) — **Terraform 方針**（D-003）
 - [meta/schemas/README.md](../meta/schemas/README.md) — config schema・検証注意点
 - [techdev-cursor integration](integrations/techdev-cursor.md)
 - [dopagaki-transition integration](integrations/dopagaki-transition.md)

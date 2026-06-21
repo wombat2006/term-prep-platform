@@ -4,7 +4,7 @@ Status:
 **計画のみ** — 2026-06-21 時点。実装は未着手。
 
 Related:
-[ARCHITECTURE.md](ARCHITECTURE.md) · [IMPLEMENTATION-COMPARISON.md](IMPLEMENTATION-COMPARISON.md) · [TO-BE-PLATFORM.md](../meta/TO-BE-PLATFORM.md) · [TODO.md](../meta/TODO.md) · [MCP-CONTRACTS.md](MCP-CONTRACTS.md)
+[ARCHITECTURE.md](ARCHITECTURE.md) · [IMPLEMENTATION-COMPARISON.md](IMPLEMENTATION-COMPARISON.md) · [IAC.md](IAC.md) · [TO-BE-PLATFORM.md](../meta/TO-BE-PLATFORM.md) · [TODO.md](../meta/TODO.md) · [MCP-CONTRACTS.md](MCP-CONTRACTS.md)
 
 ---
 
@@ -236,9 +236,9 @@ flowchart LR
 
 | Phase | AWS 関連 |
 |---|---|
-| **0.5** | S3 mirror contract · IAM read/write · `sync_corpus` → S3 |
+| **0.5** | S3 mirror contract · IAM read/write · `sync_corpus` → S3 · **Terraform: S3 + IAM**（[D-003](../meta/glossary-pipeline/DECISIONS.md#d-003)） |
 | **1–3 stub** | ローカル CLI batch で PoC · `prep_batch --shard N/M` インタフェース |
-| **3+ ops** | EC2 Spot launch template · EKS Job manifest · **AWS Batch** キュー（評価） |
+| **3+ ops** | **Terraform:** EC2 Spot launch template · ECS task · EKS Job manifest は既存クラスタ時 |
 | **2.5 LLM provider** | Batch API adapter のみ · sync path は MCP 小規模専用 |
 
 ---

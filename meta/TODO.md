@@ -52,6 +52,7 @@ Governance: [P-007](glossary-pipeline/PROBLEMS.md#p-007) · [OPTIONS § P-007](g
 
 - [ ] `scripts/connectors/s3.py` skeleton（Drive 以外）
 - [ ] 認証: env / IAM role のみ
+- [ ] **Terraform** `modules/s3-mirror` · `iam-prep-batch` · `kms-secrets`（[D-003](glossary-pipeline/DECISIONS.md#d-003) · [docs/IAC.md](../docs/IAC.md)）
 
 ### 0.5-3 — Google Drive（googledrive-connector 流用）
 

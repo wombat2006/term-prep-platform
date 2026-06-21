@@ -349,7 +349,40 @@ AWS 以外の選択肢を含む全体像。
 
 ---
 
-## 7. 推奨方針（2026-06-21）
+## 7. IaC — Terraform（採択済み）
+
+**Decision:** [D-003](../meta/glossary-pipeline/DECISIONS.md#d-003) · 詳細: [IAC.md](IAC.md)
+
+| 項目 | 内容 |
+|---|---|
+| **ツール** | Terraform（HCL） |
+| **第一対象** | AWS — S3 · IAM ·（Phase 3+）EC2 / ECS |
+| **配置** | `infra/terraform/` |
+| **初回実装** | Phase 0.5 — S3 mirror バケット + prep batch IAM |
+
+### メリット（本 repo 文脈）
+
+- S3 `corpus/` · `prep/` と IAM を **ARCHITECTURE / glossary-config と同期**してレビューできる
+- consumer ごとのプレフィックスを **変数 1 つ**で増やせる
+- EC2 / ECS の比較 PoC 時に **compute モジュールだけ差し替え**可能
+
+### デメリット・注意
+
+- Phase 0 のローカル CLI 段階では **オーバーヘッド** — `.tf` は 0.5 から
+- リモート state（S3 backend）のセットアップが先に要る
+- Cloudflare 併用時は provider が増え、workspace 分離を推奨
+
+### 採用タイミング
+
+```text
+Phase 0.5  → Terraform: S3 + IAM のみ（PoC の初回 EC2 は手動可）
+定期 ingest → EC2 launch template または ECS module 追加
+EKS 既存    → Job manifest は Git 管理（Terraform 外でも可）
+```
+
+---
+
+## 8. 推奨方針（2026-06-21）
 
 ### 機能ロードマップ
 
@@ -360,7 +393,8 @@ AWS 以外の選択肢を含む全体像。
 ### バッチ実行基盤
 
 ```text
-単発 PoC · 固定費最小     → EC2 Spot（第一候補）
+単発 PoC · 固定費最小     → EC2 Spot（第一候補）· 手動可
+Phase 0.5 S3 着地         → Terraform: S3 + IAM（D-003）
 Docker 化後 · K8s 不要    → ECS Fargate（EventBridge 定期）
 K8s 既存 · 多 tenant      → EKS Job + CronJob
 GLiNER GPU 大規模のみ     → SageMaker Processing（段分離）
@@ -385,7 +419,7 @@ flowchart LR
 
 ---
 
-## 8. Open Questions
+## 9. Open Questions
 
 1. **Confluence 取り込み** — export バッチで足りるか、専用 connector を Phase 0.5 に足すか
 2. **PII + sanitize** — 1 MCP に統合するか 2 サーバのまま `_shared` で engine 共有するか
@@ -393,12 +427,14 @@ flowchart LR
 4. **AWS 第一選択** — 単発 EC2 Spot vs ECS Fargate vs 既存 EKS vs SageMaker（GLiNER 分離）
 5. **Cloudflare ハイブリッド** — R2 + Containers のみ vs embed/Vector まで CF 統一
 6. **LLM provider** — Bedrock batch vs OpenAI Batch vs Workers AI
+7. **Terraform backend** — state 用 S3/DynamoDB のアカウント配置 — [IAC.md](IAC.md)
 
 ---
 
 ## 参照
 
 - [ARCHITECTURE.md](ARCHITECTURE.md)
+- [IAC.md](IAC.md)
 - [ROADMAP-AND-COSTS.md](ROADMAP-AND-COSTS.md)
 - [integrations/techdev-cursor.md](integrations/techdev-cursor.md)
 - [meta/glossary-pipeline/PROBLEMS.md](../meta/glossary-pipeline/PROBLEMS.md)
