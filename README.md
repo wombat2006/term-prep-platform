@@ -45,7 +45,7 @@ print(ProviderRegistry.from_config().classify('探索').to_dict())
 "
 ```
 
-**System:** MeCab (`libmecab`) — AlmaLinux: `sudo dnf install mecab mecab-devel`
+**System:** MeCab (`libmecab`) — AlmaLinux: `sudo dnf install mecab` only
 
 ---
 

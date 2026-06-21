@@ -1,9 +1,9 @@
 # Tooling dependencies (glossary extraction and similar text analysis)
 #
 # Requires: MeCab shared library (libmecab) on the host OS.
+#   AlmaLinux/RHEL 9: sudo dnf install mecab   (mecab-devel not in AppStream)
 #   Debian/Ubuntu: sudo apt install mecab libmecab-dev
 #   macOS: brew install mecab
-#
 # Dictionary: unidic-lite (pip) — mandatory for this project.
 #   Optional full UniDic: pip install unidic && python -m unidic download
 

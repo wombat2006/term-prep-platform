@@ -17,7 +17,7 @@ python -m pip install -r requirements-mcp.txt
 
 | OS | Command |
 |---|---|
-| AlmaLinux / RHEL | `sudo dnf install mecab mecab-devel` |
+| AlmaLinux / RHEL 9 | `sudo dnf install mecab`（`mecab-devel` は **不要** — AppStream に無い） |
 | Debian/Ubuntu | `sudo apt install mecab libmecab-dev` |
 | macOS | `brew install mecab` |
 
