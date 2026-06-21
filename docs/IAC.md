@@ -18,7 +18,8 @@ Related:
 | **外部 API 接続** | API クライアントコードの代わりではない。**Secrets · KMS · egress · batch 実行環境**で効く |
 | **KMS** | **採用推奨** — S3 暗号化 · Secrets Manager とセット |
 | **API Gateway** | **条件付き** — platform を HTTP で公開するときのみ。outbound batch 中心なら後回し |
-| **SES** | **採用（計画）** — batch 完了/失敗 · レビュー依頼などのメール通知（Phase 3+） |
+| **LINE Webhook** | **◎ 第一候補** — 既存 LINE Business 通知基盤へ POST（Phase 3+） |
+| **SES** | **△ 任意** — メール必須のレビュー担当向け（LINE で足りる間は後回し） |
 | **CloudFormation** | **不採用** — Terraform と役割重複 · CF 経路を CFN で書けない |
 
 ---
@@ -135,6 +136,7 @@ IaC は **API の呼び方**ではなく **安全に呼ぶための周辺**を�
 | API の種類 | IaC の効き | 備考 |
 |---|---|---|
 | OpenAI Batch（embed） | ○ | Secrets Manager + IAM + batch role |
+| LINE Webhook（通知） | ◎ | Webhook URL in Secrets · Lambda POST · **既存サーバと同型** |
 | 社内 REST（用語 DB） | ◎ | 固定 IP 要求なら NAT+EIP も Terraform |
 | Confluence API | ○ | connector 実装は別 · secret は IaC |
 | GLiNER（HF モデル DL） | △ | 初回 DL はコンテナイメージ固定の方が楽 |
@@ -152,14 +154,15 @@ Secrets Manager（リソースのみ · 値は手動/CI 注入）
 
 ---
 
-## 5. AWS サービス選定 — KMS · API Gateway · SES · CloudFormation
+## 5. AWS サービス選定 — KMS · 通知 · API Gateway · CloudFormation
 
 | サービス | 採用 | 本 PRJ での役割 |
 |---|---|---|
 | **KMS** | **◎ 推奨** | S3 SSE-KMS · Secrets Manager 暗号化 · consumer 別 CMK |
-| **Secrets Manager** | **◎ 推奨** | 外部 API key · OpenAI key（値は Terraform 外） |
+| **Secrets Manager** | **◎ 推奨** | 外部 API key · **LINE Webhook URL**（値は Terraform 外） |
+| **LINE Webhook** | **◎ 第一候補** | prep batch · 運用アラート — **既存サーバ監視と同経路** |
 | **API Gateway** | **△ 条件付き** | consumer が HTTP で prep をトリガーする場合のみ |
-| **SES** | **○ 採用（計画）** | prep batch 完了/失敗通知 · adopt/hold レビュー依頼メール |
+| **SES** | **△ 任意** | メール必須のレビュー依頼 · LINE で足りない場合のみ |
 | **CloudFormation** | **✗ 不採用** | Terraform と重複 · CF 経路非対応 — [§7](#7-terraform-vs-cloudformation-検証) |
 
 ### KMS — Phase 0.5 から入れる価値あり
@@ -182,32 +185,111 @@ consumer → API Gateway → Lambda/ECS → batch job
 
 MCP stdio · ローカル CLI には不要。
 
-### SES — メール通知（Phase 3+ · 採用計画）
+### LINE Webhook — 運用通知（Phase 3+ · **第一候補**）
 
-batch や人間レビューで **メール通知**が要る場合は **Amazon SES** を使う（SMTP パスワードより IAM role + API 送信を推奨）。
+**既存資産:** サーバ監視から **LINE Business アカウント**へ Webhook 通知する基盤が稼働済み（例: `line-notification.com` · nginx · line-webhook）。prep platform も **同じ HTTP POST パターン**で実装できる — 新規 LINE 連携の設計コストが低い。
+
+```text
+EventBridge（prep succeeded/failed/warning）
+  → Lambda prep-notify
+  → POST 既存 Webhook URL（Secrets Manager に格納）
+  → LINE Business へ配信
+```
+
+**Terraform で書くもの（platform 側）**
+
+| リソース | 内容 |
+|---|---|
+| Secrets Manager | Webhook URL **リソース**（値は手動登録） |
+| IAM | Lambda notify role · `secretsmanager:GetSecretValue` + egress HTTPS |
+| Lambda + EventBridge | prep イベント → Webhook POST |
+| （LINE サーバ本体） | **Terraform 対象外** — 既存運用のまま |
+
+**メッセージ形式（既存サーバ監視と同型）**
+
+prep batch 完了（SUCCESS 相当）:
+
+```text
+✅ SUCCESS
+
+📍 Job: prep-batch / techdev-cursor
+💬 Periodic prep report: ✅ Completed
+
+📋 Details:
+📂 S3: s3://…/prep/techdev-cursor/
+📊 adopt: 42 · hold: 128 · shards: 4/4
+
+🕐 2026/6/21 22:33:24
+```
+
+閾値超過・異常（WARNING / FAILED 相当）:
+
+```text
+⚠️ WARNING
+
+📍 Job: prep-batch / techdev-cursor
+💬 GLiNER shard slow: 2/4 pending
+
+📋 Details:
+Threshold: 30 min
+Elapsed: 47 min
+Shard: 3/4
+
+🕐 2026/6/21 22:33:24
+```
+
+```text
+❌ FAILED
+
+📍 Job: prep-batch / techdev-cursor
+💬 Presidio shard failed: exit 1
+
+📋 Details:
+Shard: 2/4
+S3 log: s3://…/prep/logs/shard-2.log
+
+🕐 2026/6/21 22:33:24
+```
+
+**サーバ監視との統一**
+
+| 既存（サーバ監視） | prep platform（計画） |
+|---|---|
+| `✅ SUCCESS` / `⚠️ WARNING` | 同じ severity プレフィックス |
+| `📍 Server: hostname (IP / region)` | `📍 Job: prep-batch / {consumer}` |
+| `💬` 一行サマリ | prep 段階の要約 |
+| `📋 Details:` ブロック | S3 パス · メトリクス · shard 状態 |
+| `🕐` タイムスタンプ | 同上 |
+
+**用途**
+
+| 用途 | severity |
+|---|---|
+| batch 正常完了 | ✅ SUCCESS |
+| shard 遅延 · リトライ | ⚠️ WARNING |
+| prep 失敗 · PII エラー | ❌ FAILED |
+| adopt/hold 生成完了（レビュー促し） | ✅ SUCCESS + Details に件数 |
+
+### SES — メール通知（Phase 3+ · 任意）
+
+**LINE で運用通知が足りる間は後回し。** 社外メール · 非エンジニアレビュー担当向けにのみ検討。
 
 | 用途 | 例 |
 |---|---|
-| batch 完了/失敗 | EventBridge（job state）→ Lambda → SES |
-| レビュー依頼 | adopt/hold 生成後 · 担当者へリンク付き通知 |
-| 運用アラート | prep 失敗 · S3 容量 · shard 停滞 |
+| レビュー依頼（メール派） | adopt/hold 生成後 · 担当者へリンク付き |
+| 社外共有 | LINE 非利用のステークホルダー |
 
-**Terraform で書くもの**
+**Terraform で書くもの**（SES を使う場合のみ）
 
 | リソース | 内容 |
 |---|---|
 | `aws_ses_domain_identity` / DKIM | 送信ドメイン検証 |
-| `aws_ses_configuration_set` | バウンス/配信イベント（任意） |
-| IAM | Lambda または専用 notify role に `ses:SendEmail` 最小権限 |
+| IAM | `ses:SendEmail` 最小権限 |
 
-**注意**
-
-- 新規アカウントは **サンドボックス**（検証済み宛先のみ）— 本番前に production access 申請
-- Phase 0.5 では不要 · **EventBridge + batch 定常化と同じ Phase 3+** で追加
-- Slack/Webhook で足りる間は後回し可
+**注意:** 新規アカウントは SES **サンドボックス** — production access 申請が要る。LINE 経路があるため優先度は低い。
 
 ```text
-EventBridge（prep succeeded/failed）→ Lambda → SES → 担当者
+EventBridge → Lambda → SES（任意 · メール必須時のみ）
 ```
 
 ### CloudFormation — 使わない理由
@@ -242,7 +324,8 @@ EventBridge（prep succeeded/failed）→ Lambda → SES → 担当者
 | ECS task + EventBridge | Docker 化後 |
 | SQS | shard 並列 |
 | API Gateway + Lambda | HTTP トリガー要件が出たら |
-| SES + Lambda（notify） | batch 完了/失敗 · レビュー依頼メール |
+| Lambda prep-notify + EventBridge | **LINE Webhook**（batch SUCCESS/WARNING/FAILED） |
+| SES + Lambda（任意） | メール必須のレビュー依頼のみ |
 | EKS Job | 既存クラスタがある場合のみ（manifest は Git 可） |
 
 ### Cloudflare（任意 · 別 workspace）
@@ -264,7 +347,8 @@ infra/terraform/
     ec2-spot/               … Phase 3+
     ecs-prep/               … Phase 3+
     api-prep-trigger/       … Phase 3+（任意）
-    ses-notify/             … Phase 3+（domain · DKIM · notify IAM）
+    prep-notify/            … Phase 3+（Lambda · EventBridge · Webhook URL secret）
+    ses-notify/             … Phase 3+（任意 · SES domain/DKIM）
   environments/
     dev/
     prod/
@@ -329,10 +413,11 @@ flowchart TB
     DP[dopagaki-transition]
   end
 
-  subgraph external ["外部 API"]
+  subgraph external ["外部 · 通知"]
     OAI[OpenAI Batch]
     INT[社内 REST]
-    SES[Amazon SES]
+    LINE[LINE Webhook 既存]
+    SES[Amazon SES 任意]
   end
 
   S3 --> CFG
@@ -341,6 +426,7 @@ flowchart TB
   COMPUTE --> S3
   COMPUTE --> OAI
   COMPUTE --> INT
+  COMPUTE --> LINE
   COMPUTE -.-> SES
   AGW -.-> COMPUTE
   TD --> CFG
@@ -374,9 +460,10 @@ flowchart TB
 1. S3 + IAM + KMS + Secrets（Phase 0.5）     … 基盤 · consumer 接続
 2. EC2 Spot launch template（Phase 3+）       … batch 定常化
 3. ECS + EventBridge（Docker 化後）
-4. SES + Lambda notify（batch 通知 · レビュー依頼メール）
-5. API Gateway（HTTP トリガー要件が出たら）
-6. Cloudflare module（AWS 非利用 · CF 既契約時）
+4. prep-notify → LINE Webhook（既存基盤 · batch SUCCESS/WARNING/FAILED）
+5. SES（任意 · メール必須時のみ）
+6. API Gateway（HTTP トリガー要件が出たら）
+7. Cloudflare module（AWS 非利用 · CF 既契約時）
 
 採用しない（当面）
   - CloudFormation / CDK
@@ -392,7 +479,8 @@ flowchart TB
 3. **Cloudflare provider** — R2 のみ先に入れるか
 4. **org 標準** — CFN StackSets 等の有無（Terraform 見直しトリガー）
 5. **API Gateway** — HTTP トリガー要件の有無
-6. **SES 送信ドメイン** — 既存ドメイン vs 新規 · サンドボックス解除タイミング
+6. **LINE Webhook URL** — 既存 line-notification エンドポイントを Secrets に登録
+7. **SES 送信ドメイン** — LINE で足りる間は defer
 
 ---
 

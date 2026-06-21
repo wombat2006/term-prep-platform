@@ -110,9 +110,12 @@ Living document
 1. Phase 0.5 — S3 バケット + IAM + KMS/Secrets（prep batch 最小権限 · 外部 API key 基盤）
 2. Phase 3+ ops — EC2 launch template または ECS（定期 ingest 定常化後）
 3. Phase 3+（任意）— API Gateway（HTTP で prep トリガーする要件が出たら）
-4. Phase 3+ — **Amazon SES**（batch 完了/失敗 · レビュー依頼メール通知）
+4. Phase 3+ — **LINE Webhook**（既存 line-notification 基盤 · prep SUCCESS/WARNING/FAILED）
+5. Phase 3+（任意）— SES · API Gateway
 
-**棄却の補足:** CloudFormation — [IAC.md §7](../../docs/IAC.md#7-terraform-vs-cloudformation-検証) · KMS/SES/API Gateway — [IAC.md §5](../../docs/IAC.md#5-aws-サービス選定--kms--api-gateway--ses--cloudformation)
+**通知方針:** 運用アラートは **LINE 第一**（サーバ監視と同型メッセージ）· SES はメール必須時のみ — [IAC.md §5](../../docs/IAC.md#line-webhook--運用通知phase-3--第一候補)
+
+**棄却の補足:** CloudFormation — [IAC.md §7](../../docs/IAC.md#7-terraform-vs-cloudformation-検証) · KMS/LINE/SES — [IAC.md §5](../../docs/IAC.md#5-aws-サービス選定--kms--通知--api-gateway--cloudformation)
 
 **実装:** planned — [docs/IAC.md](../../docs/IAC.md) · [infra/terraform/README.md](../../infra/terraform/README.md)
 

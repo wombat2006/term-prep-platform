@@ -17,7 +17,8 @@ Status:
 | `ec2-spot` | 3+ ops | launch template · Spot |
 | `ecs-prep` | 3+ ops | task definition · EventBridge |
 | `api-prep-trigger` | 3+（任意） | API Gateway — HTTP トリガー要件時のみ |
-| `ses-notify` | 3+ | SES domain/DKIM · notify IAM · EventBridge→Lambda 連携 |
+| `prep-notify` | 3+ | Lambda · EventBridge · LINE Webhook URL（Secrets） |
+| `ses-notify` | 3+（任意） | SES domain/DKIM — メール必須時のみ |
 
 ---
 
