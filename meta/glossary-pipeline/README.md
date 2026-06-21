@@ -16,7 +16,18 @@ Portable scaffold — **canonical home** for glossary-pipeline governance
 用語抽出パイプラインの **問題・解決手段の案・採択** を、実装（Python）から分離して記録する。
 
 - 本リポジトリだけでなく **他 PRJ・専門用語辞典 PRJ** へコピーして使う
-- [TO-BE-GLOSSARY-PIPELINE.md](../TO-BE-GLOSSARY-PIPELINE.md) は方向性、**本ディレクトリは手段の検討ログ**
+- [TO-BE-PLATFORM.md](../TO-BE-PLATFORM.md) は方向性、**本ディレクトリは手段の検討ログ**
+
+### Prep Platform 上の位置
+
+```mermaid
+flowchart LR
+  D[社内データ] --> PII --> SAN --> EXT[extract] --> NF[noise filter MCP] --> REG[term registry]
+  REG --> RAG & GLO & QX
+  QX --> RAG
+```
+
+本ディレクトリが扱うのは主に **extract · noise filter（Knowledge Filter MCP）· registry 周辺** の governance（P-001–P-006）。PII / sanitize は [mcp/](../../mcp/README.md) 側、RAG / 辞書 / query expander は consumer 側。
 
 ---
 
@@ -68,7 +79,7 @@ cp scripts/glossary_extractor.py /path/to/other-project/scripts/
 cp requirements-dev.txt /path/to/other-project/   # または追記
 
 #  optional
-cp meta/TO-BE-GLOSSARY-PIPELINE.md /path/to/other-project/meta/
+cp meta/TO-BE-PLATFORM.md /path/to/other-project/meta/
 ```
 
 移植後:
@@ -111,7 +122,7 @@ OPTIONS.md インデックス更新
 
 ## 関連
 
-- [TO-BE-GLOSSARY-PIPELINE.md](../TO-BE-GLOSSARY-PIPELINE.md) — 技術 TO-BE・Phase ロードマップ
+- [TO-BE-PLATFORM.md](../TO-BE-PLATFORM.md) — 技術 TO-BE・Phase ロードマップ
 - [glossary-config.json](../glossary-config.json) — 本 PRJ の実行時設定
 - [scripts/README.md](../../scripts/README.md) — fugashi セットアップ
 

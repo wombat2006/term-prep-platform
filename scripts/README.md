@@ -5,6 +5,18 @@ term-prep-platform
 
 ---
 
+## Position in target flow
+
+`glossary_extractor.py` は Prep Platform パイプラインの **extract → noise filter → term registry** 区間を担う CLI 入口（PII / sanitize は upstream MCP、registry 以降の RAG / 辞書 / query expander は consumer）。
+
+```text
+社内データ → [PII MCP] → [sanitize MCP] → glossary_extractor → term registry → RAG / glossary / query expander
+```
+
+図解: [docs/ARCHITECTURE.md](../docs/ARCHITECTURE.md)
+
+---
+
 ## Setup
 
 ```bash
