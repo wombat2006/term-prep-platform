@@ -158,6 +158,8 @@ OPTIONS.md インデックス更新
 | [P-004](PROBLEMS.md#p-004) | CLI とロジックの同居 | [OPTIONS.md](OPTIONS.md#p-004) |
 | [P-005](PROBLEMS.md#p-005) | RAG 前処理未対応 | [OPTIONS.md](OPTIONS.md#p-005) |
 | [P-006](PROBLEMS.md#p-006) | 複合語・英日ペア未統合 | [OPTIONS.md](OPTIONS.md#p-006) |
+| [P-007](PROBLEMS.md#p-007) | 外部 corpus fetch の分散 | [OPTIONS.md](OPTIONS.md#p-007) |
+| [P-008](PROBLEMS.md#p-008) | RAG Vector 投入の共通化 | [OPTIONS.md](OPTIONS.md#p-008) |
 
 採択済み: [DECISIONS.md](DECISIONS.md) — [D-002](DECISIONS.md#d-002) Knowledge Filter MCP（stub、closed）
 

@@ -11,6 +11,7 @@ Extracted from [dopagaki-transition](https://github.com/wombat2006/dopagaki-tran
 
 Related:
 [README.md](../README.md)
+[TODO.md](TODO.md)
 [glossary-pipeline/](glossary-pipeline/README.md)
 [docs/ARCHITECTURE.md](../docs/ARCHITECTURE.md)
 
@@ -63,10 +64,12 @@ flowchart LR
 
 | フロー上の段 | 本 repo | 備考 |
 |---|---|---|
+| **fetch / sync（Phase 0.5）** | `connectors/googledrive/`（**TS 流用** · mirror）· S3 Python | Drive は新規 Python 実装しない |
+| **RAG Vector（Phase 4.5）** | 同一 connector · `vector` モード | prep 後 hook · [P-008](glossary-pipeline/PROBLEMS.md#p-008) |
 | PII → sanitize | `mcp/pii-guard` · `mcp/sanitize` | ドキュメント単位。extract より前 |
 | extract → noise filter | `mcp/term-extract` · `mcp/glossary-knowledge` | 候補語抽出とノイズ分類 |
 | term registry | `scripts/glossary/registry.py` | TS / ADR / GLOSSARY seed。出口の正 |
-| Outputs | consumer PRJ | RAG は `--rag-index`（Phase 4）で接続 |
+| Outputs | 利用側 · **Phase 4.5 で Vector 共通化案** | term index（Phase 4）· Vector Store（Phase 4.5） |
 
 **2 つの見方:** 上図は **データが流れる順**（ingest → prep → outputs）。下記「Core 内部」は **glossary_extractor が今実装している用語処理の順**（registry を seed として extract 前に読む）。最終的には上図の直列パイプラインに MCP + CLI を揃える。
 
@@ -112,6 +115,7 @@ scripts/glossary/                 ← ロジック本体（別立てで改修・
 | 設定 | `meta/glossary-config.json` — stop 語・manual_adopt・閾値 |
 | 出力 | adopt / hold / reject 分割（`write_outputs`） | **done** — Phase 0 |
 | 正典 | 人間が `GLOSSARY.md` に反映 |
+| **外部 fetch** | **利用側** — techdev-cursor に RAG 用 `googledrive-connector.ts` | Phase 0.5: **TS 流用** · Phase 4.5: Vector 共通化（提案） |
 
 ### 規模感（Accepted 原稿 7 ファイルのみ）
 
@@ -299,18 +303,70 @@ registry + rule filter **の後**、rank **の前**。Phase 0–1 完了後に�
 
 ---
 
+## AS-IS / To-Be — ingest（Source connector）
+
+| | AS-IS（2026-06-21） | To-Be（Phase 0.5 提案） |
+|---|---|---|
+| **fetch** | 利用側（`googledrive-connector.ts` 等）または手動配置 | platform **`connectors/googledrive/`** — techdev-cursor TS **流用** · S3 は Python adapter |
+| **prep 入力** | ローカル `corpus.files` | mirror 後も同じ — extractor 変更最小 |
+| **RAG Vector 投入** | 利用側 TS のみ | **Phase 4.5 提案** — 同一 connector の `vector` モード · [O-P008-001](glossary-pipeline/options/O-P008-001-rag-vector-connector.md) |
+| **認証** | consumer OAuth / env | env のみ — secret を repo に置かない |
+| **governance** | 未整理 | [P-007](glossary-pipeline/PROBLEMS.md#p-007) · [P-008](glossary-pipeline/PROBLEMS.md#p-008) · [O-P007-004](glossary-pipeline/options/O-P007-004-googledrive-connector-reuse.md) |
+
+```mermaid
+flowchart TB
+  subgraph asis ["AS-IS"]
+    direction LR
+    A_EXT[外部ストレージ] --> A_CON[利用側 fetch]
+    A_CON --> A_LOC[ローカル corpus]
+    A_LOC --> A_PREP[platform prep]
+  end
+  subgraph tobe ["To-Be"]
+    direction LR
+    T_EXT[外部ストレージ] --> T_GDC[googledrive-connector.ts 流用]
+    T_GDC -->|mirror| T_MIRROR[local mirror]
+    T_MIRROR --> T_PREP[PII → … → registry]
+    T_GDC -->|vector Phase 4.5| T_VS[Vector Store]
+    T_PREP --> T_VS
+  end
+```
+
+---
+
 ## 実装ロードマップ
 
-| Phase | 内容 | CLI 変更 |
-|---|---|---|
-| **0** | 出力分割・gitignore・candidates 廃止 | なし |
-| **1** | `scripts/glossary/` 分離 | なし（import 先のみ） |
-| **2** | registry + filter 強化 | なし |
-| **2.5** | Knowledge Filter MCP（D-002） | なし（config `knowledge_filter.enabled`） |
-| **3** | GLOSSARY 差分提案 | `--diff-glossary` 追加可 |
-| **4** | RAG subpackage | `--rag-index` 追加可 |
+```mermaid
+flowchart LR
+  P0["Phase 0<br/>出力・schema"] --> P05["Phase 0.5<br/>Source connector"]
+  P05 --> P1["Phase 1<br/>Core 分離"]
+  P1 --> P2["Phase 2<br/>registry·filter"]
+  P2 --> P25["Phase 2.5<br/>Knowledge MCP"]
+  P25 --> P3["Phase 3<br/>GLOSSARY diff"]
+  P3 --> P4["Phase 4<br/>RAG term index"]
+  P4 --> P45["Phase 4.5<br/>Vector connector"]
 
-**原則:** 既存 `python scripts/glossary_extractor.py` は Phase 0–2 まで **そのまま動く**。
+  style P0 fill:#c8e6c9,stroke:#2e7d32
+  style P05 fill:#fff9c4,stroke:#f9a825
+  style P45 fill:#fff9c4,stroke:#f9a825
+  style P1 fill:#e0e0e0,stroke:#757575
+  style P2 fill:#e0e0e0,stroke:#757575
+  style P25 fill:#e0e0e0,stroke:#757575
+  style P3 fill:#e0e0e0,stroke:#757575
+  style P4 fill:#e0e0e0,stroke:#757575
+```
+
+| Phase | 内容 | CLI 変更 | 状態 |
+|---|---|---|---|
+| **0** | 出力分割 · gitignore · schema 検証 | なし | **done** |
+| **0.5** | Source connector — S3（Python）· **Drive（googledrive-connector.ts 流用 · mirror）** | `sync_corpus` / npm script | **提案** |
+| **1** | `scripts/glossary/` 分離 | なし | 未着手 |
+| **2** | registry + filter 強化 | なし | 未着手 |
+| **2.5** | Knowledge Filter MCP（D-002） | なし | stub |
+| **3** | GLOSSARY 差分提案 | `--diff-glossary` 可 | 未着手 |
+| **4** | RAG term index（Python subpackage） | `--rag-index` 可 | 未着手 |
+| **4.5** | **RAG Vector connector** — 同一 TS の `vector` モード · prep 後 hook | config `outputs.rag` | **提案** — [P-008](glossary-pipeline/PROBLEMS.md#p-008) |
+
+**原則:** 既存 `python scripts/glossary_extractor.py` は Phase 0–2 まで **そのまま動く**。Phase 0.5 は mirror **前段** の追加。
 
 ---
 
@@ -322,6 +378,8 @@ registry + rule filter **の後**、rank **の前**。Phase 0–1 完了後に�
 4. **UniDic 標準** — unidic-lite（pip）vs full UniDic（他 PRJ 共通）
 5. **Core の配布** — 各 repo に `scripts/glossary/` コピー vs 将来 pip package 化
 6. **Knowledge Filter 第一 provider** — K-003 / K-006 / K-008（[RL-20260621](../research-log/RL-20260621-knowledge-filter-mcp.md)）
+7. **Source connector** — S3 は O-P007-001 · **Drive は O-P007-004 流用**（[P-007](glossary-pipeline/PROBLEMS.md#p-007)）
+8. **RAG Vector connector** — Phase 4.5 · O-P008-001 vs 利用側のみ（[P-008](glossary-pipeline/PROBLEMS.md#p-008)）
 
 ---
 
@@ -332,4 +390,4 @@ registry + rule filter **の後**、rank **の前**。Phase 0–1 完了後に�
 | 今の py を捨てるか | **捨てない** — CLI 入口として維持 |
 | ロジックの育て方 | **`scripts/glossary/` に別立て** — Phase 1 で切り出し |
 | RAG は今やるか | **しない** — Phase 4。To-Be に要件のみ |
-| 今すぐやる改修 | **Phase 0**（出力分割・reject 非追跡）が最優先 |
+| 今すぐやる改修 | **Phase 0.5 設計**（P-007 採択 · contract）→ Phase 1 Core 分離 |

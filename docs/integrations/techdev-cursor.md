@@ -43,6 +43,10 @@ Consumer copy in repo: [techdev-cursor/meta/glossary-config.json](https://github
 
 Set `corpus.files` when Drive sync local mirror path is fixed.
 
+**Phase 0.5:** Google Drive corpus mirror は platform へ移管する **techdev-cursor [`googledrive-connector.ts`](https://github.com/wombat2006/techdev-cursor/blob/master/src/services/googledrive-connector.ts) の流用**が推奨方針（mirror モード）— [O-P007-004](../../meta/glossary-pipeline/options/O-P007-004-googledrive-connector-reuse.md)。
+
+**Phase 4.5:** 同一 connector の **vector モード**で RAG Vector 投入も platform 共通化する案 — consumer 側の再実装を減らす（[P-008](../../meta/glossary-pipeline/PROBLEMS.md#p-008)）。techdev-cursor Phase 4 hook はこの公式パスに接続予定。
+
 ### Config 注意点
 
 | 項目 | 内容 |

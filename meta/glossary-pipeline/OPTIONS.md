@@ -30,6 +30,11 @@ Living document
 | O-P005-002 | P-005 | 章単位 chunk のみ（簡易） | proposed | 最小 RAG 準備 |
 | O-P006-001 | P-006 | seed 最長一致マージ | proposed | registry ベース |
 | O-P006-002 | P-006 | 英日 alias テーブル | proposed | 手動 + 半自動 |
+| O-P007-001 | P-007 | Platform 薄型 SourceConnector（S3 等） | proposed | mirror → prep |
+| O-P007-002 | P-007 | ingest は利用側のまま | proposed | 現状維持 |
+| O-P007-003 | P-007 | rclone ラッパーのみ | proposed | Phase 0.5 軽量版 |
+| O-P007-004 | P-007 | **googledrive-connector.ts 流用** | **proposed（推奨方針）** | mirror / vector モード |
+| O-P008-001 | P-008 | Platform RAG Vector connector | proposed | Phase 4.5 |
 
 ---
 
@@ -103,6 +108,31 @@ RAG 前処理未対応
 |---|---|---|---|
 | O-P006-001 | 追加データ少 | registry 依存 | proposed |
 | O-P006-002 | 明示的 | 手メンテ | proposed |
+
+---
+
+## P-007 {#p-007}
+
+外部 corpus の fetch が利用側に分散
+
+| 案 | メリット | デメリット | Status |
+|---|---|---|---|
+| [O-P007-001](options/O-P007-001-platform-source-connector.md) | S3 等 · prep 入口が一貫 | Python adapter 新規 | proposed |
+| [O-P007-004](options/O-P007-004-googledrive-connector-reuse.md) | **Drive: TS 流用** · 二重実装なし | 移管コスト | **proposed（推奨方針）** |
+| [O-P007-002](options/O-P007-002-consumer-ingest-only.md) | platform スコープ最小 | consumer 重複 | proposed |
+| [O-P007-003](options/O-P007-003-rclone-wrapper.md) | 実装コスト低 · 多 backend | rclone 依存 | proposed |
+
+**メモ:** RAG Vector 投入用 connector は **O-P008-001** — Drive 接続は **O-P007-004 流用**で 1 モジュール 2 モード（mirror / vector）。
+
+---
+
+## P-008 {#p-008}
+
+RAG Vector 投入が利用側に閉じている
+
+| 案 | メリット | デメリット | Status |
+|---|---|---|---|
+| [O-P008-001](options/O-P008-001-rag-vector-connector.md) | fetch·prep·Vector を 1 ストーリー | platform スコープ拡大 | proposed |
 
 ---
 

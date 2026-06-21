@@ -21,11 +21,13 @@
 4. 一般語とドメイン語の切り分け（noise filter）
 5. 用語レジストリの整備（term registry）
 
-**ここまでが本リポジトリの範囲**です。embedding、Vector Store、chunk 索引、`GLOSSARY.md` の最終採択、Drive 連携アプリ本体は、利用側リポジトリ側の責務です。
+**ここまでが prep（Python）の中核**です。`GLOSSARY.md` の最終採択は利用側の責務です。
+
+**connector（提案）:** Google Drive は techdev-cursor の [`googledrive-connector.ts`](https://github.com/wombat2006/techdev-cursor/blob/master/src/services/googledrive-connector.ts) を platform へ **移管・流用**（Phase 0.5 · mirror モード）。**RAG Vector 投入**も同モジュールの vector モードで platform 共通化する案あり（Phase 4.5）— 利用側 repo ごとの再実装を減らす。
 
 設計と骨格は揃っていますが、MCP の多くはこれから実装する段階です。いま動いているのは Phase 0 の `glossary_extractor` と設定スキーマ検証、`glossary-knowledge` MCP の stub です。
 
-アーキテクチャ図（Component / Sequence など）: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
+アーキテクチャ図: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) · ロードマップ: [meta/TO-BE-PLATFORM.md](meta/TO-BE-PLATFORM.md) · 実行 TODO: [meta/TODO.md](meta/TODO.md)
 
 ---
 
@@ -34,8 +36,8 @@
 | | 本リポジトリ | 利用側リポジトリ |
 |---|---|---|
 | 例 | term-prep-platform | [techdev-cursor](https://github.com/wombat2006/techdev-cursor)、[dopagaki-transition](https://github.com/wombat2006/dopagaki-transition) |
-| 持つもの | MCP サーバ、抽出 CLI、設定スキーマ、governance テンプレ | corpus、正典、RAG 索引、ingest アプリ |
-| 接続 | `.cursor/mcp.json` から参照される | `projects/*/glossary-config.json` で設定を差し替え |
+| 持つもの | MCP · CLI · schema · **connectors（提案）** | corpus · 正典 · query expander |
+| 接続 | `.cursor/mcp.json` · npm connector scripts | `glossary-config.json` |
 
 本リポジトリが出力する adopt / hold JSON や（将来の）term registry を、各利用側が RAG・辞書・クエリ拡張に接続します。
 
@@ -81,6 +83,57 @@ flowchart LR
 | noise filter | [mcp/glossary-knowledge/](mcp/glossary-knowledge/) | stub |
 | term registry | `scripts/glossary/registry.py` | Phase 1 以降 |
 | RAG · 辞書 · クエリ拡張 | 利用側 | — |
+
+---
+
+## ロードマップ
+
+```mermaid
+flowchart LR
+  P0["Phase 0<br/>完了"] --> P05["Phase 0.5<br/>Drive 流用 · S3"]
+  P05 --> P1["Phase 1–3"]
+  P1 --> P4["Phase 4<br/>term index"]
+  P4 --> P45["Phase 4.5<br/>Vector"]
+
+  style P0 fill:#c8e6c9,stroke:#2e7d32
+  style P05 fill:#fff9c4,stroke:#f9a825
+  style P45 fill:#fff9c4,stroke:#f9a825
+  style P1 fill:#e0e0e0,stroke:#757575
+  style P4 fill:#e0e0e0,stroke:#757575
+```
+
+| Phase | 内容 | 状態 |
+|---|---|---|
+| **0** | adopt/hold 分割 · JSON Schema 検証 | **完了** |
+| **0.5** | corpus mirror — S3（Python）· **Drive（googledrive-connector.ts 流用）** | **提案** |
+| **1–3** | Core 分離 · filter · GLOSSARY | 未着手 |
+| **4** | RAG term index（Python） | 未着手 |
+| **4.5** | **RAG Vector connector** — 同一 TS · vector モード | **提案** — [P-008](meta/glossary-pipeline/PROBLEMS.md#p-008) |
+
+Phase 0.5 — Drive mirror（googledrive-connector 流用）:
+
+```mermaid
+flowchart LR
+  GD[Google Drive] --> GDC[googledrive-connector.ts]
+  GDC -->|mirror| MIRROR[build/corpus/]
+  MIRROR --> PREP[PII → … → registry]
+
+  style GDC fill:#fff9c4,stroke:#f9a825
+  style PREP fill:#e8f5e9,stroke:#2e7d32
+```
+
+Phase 4.5 — 同一 connector で Vector 投入（提案）:
+
+```mermaid
+flowchart LR
+  PREP[prep 完了] --> GDC[googledrive-connector.ts]
+  GDC -->|vector| VS[Vector Store]
+
+  style GDC fill:#fff9c4,stroke:#f9a825
+  style VS fill:#e3f2fd,stroke:#1565c0
+```
+
+チェックリスト: [meta/TODO.md](meta/TODO.md) · AS-IS / To-Be 詳細: [meta/TO-BE-PLATFORM.md](meta/TO-BE-PLATFORM.md#as-is--to-be--ingestsource-connector)
 
 ---
 
@@ -140,7 +193,8 @@ term-prep-platform/
   scripts/                … glossary_extractor.py
   meta/glossary-pipeline/ … 問題・手段案・採択（他 repo へ移植可）
   meta/schemas/           … glossary-config の JSON Schema
-  meta/TO-BE-PLATFORM.md  … ロードマップ
+  meta/TODO.md             … 実行チェックリスト（Phase 0.5 含む）
+  meta/TO-BE-PLATFORM.md  … ロードマップ · AS-IS / To-Be
   projects/               … 利用側ごとの config サンプル
   docs/                   … アーキテクチャ・連携ドキュメント
 ```
@@ -163,7 +217,9 @@ term-prep-platform/
 ## 関連ドキュメント
 
 - [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — 提供範囲と UML 図
-- [meta/TO-BE-PLATFORM.md](meta/TO-BE-PLATFORM.md) — 技術ロードマップ
+- [meta/TO-BE-PLATFORM.md](meta/TO-BE-PLATFORM.md) — AS-IS / To-Be · ロードマップ
+- [meta/TODO.md](meta/TODO.md) — 実行チェックリスト
+- [meta/glossary-pipeline/PROBLEMS.md](meta/glossary-pipeline/PROBLEMS.md#p-007) — Source connector 課題
 - [meta/glossary-pipeline/README.md](meta/glossary-pipeline/README.md) — governance の移植手順
 - [research-log/RL-20260621-knowledge-filter-mcp.md](research-log/RL-20260621-knowledge-filter-mcp.md) — Knowledge Filter MCP 方針
 

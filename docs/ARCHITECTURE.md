@@ -10,9 +10,13 @@
 | **具体例** | MCP サーバ、`glossary_extractor`、config schema、governance | corpus パス、Drive 連携、`GLOSSARY.md`、Vector Store |
 | **接続** | consumer が `.cursor/mcp.json` と `projects/*/glossary-config.json` で参照 | platform 成果物（registry · adopt/hold）を受け取る |
 
-**提供しない:** embedding、chunk 索引、人間採択の正典、ingest アプリ本体。
+**提供しない（現状）:** embedding、chunk 索引、人間採択の正典、**RAG 用 ingest アプリ本体**。
 
-**成熟度:** 設計・骨格は揃った scaffold。Phase 0（extractor + schema）は動作中。多くの MCP は planned / stub。
+**Phase 0.5（提案）:** corpus mirror — S3 は Python adapter · **Google Drive は techdev-cursor [`googledrive-connector.ts`](https://github.com/wombat2006/techdev-cursor/blob/master/src/services/googledrive-connector.ts) 流用**（mirror モード）。
+
+**Phase 4.5（提案）:** 同一 TS connector の **vector モード**で RAG Vector 投入も platform 共通化 — [P-008](../meta/glossary-pipeline/PROBLEMS.md#p-008)。prep（Python）と Vector（TS）の責務は分離、**Drive 接続コードは 1 本**。
+
+**成熟度:** 設計・骨格は揃った scaffold。Phase 0（extractor + schema）は動作中。Phase 0.5 は governance 起票済み・未実装。
 
 ---
 
@@ -174,6 +178,8 @@ consumer repos/              ← 本 repo の外
 
 | Stage | 提供物 | Status |
 |---|---|---|
+| **Source connector** | `connectors/googledrive/`（TS 流用 · mirror）· S3 Python | **Phase 0.5 提案** |
+| **RAG Vector connector** | 同一 TS · `vector` モード | **Phase 4.5 提案** — [O-P008-001](../meta/glossary-pipeline/options/O-P008-001-rag-vector-connector.md) |
 | PII MCP | `mcp/pii-guard/` | planned |
 | sanitize MCP | `mcp/sanitize/` | planned |
 | extract | `glossary_extractor` CLI · `mcp/term-extract/` | CLI 部分実装 / MCP planned |
@@ -214,3 +220,4 @@ consumer repos/              ← 本 repo の外
 - [techdev-cursor integration](integrations/techdev-cursor.md)
 - [dopagaki-transition integration](integrations/dopagaki-transition.md)
 - [TO-BE-PLATFORM.md](../meta/TO-BE-PLATFORM.md)
+- [TODO.md](../meta/TODO.md) — Phase 0.5 チェックリスト

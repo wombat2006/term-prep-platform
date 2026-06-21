@@ -83,6 +83,34 @@ Living document
 
 ---
 
+## P-007
+
+### 外部 corpus の fetch が利用側に分散
+
+**現象:** Google Drive · S3 等から Markdown を取る処理が consumer ごと（例: techdev-cursor の `googledrive-connector.ts`）にあり、platform は **ローカル `corpus.files` 前提** のみ。同じ sync ロジックを prep 利用側ごとに書きがち。
+
+**本 PRJ の観測（2026-06-21）:** techdev-cursor は Drive → RAG 用 connector あり。glossary 用 corpus mirror パスは config 未固定。dopagaki は sibling 原稿 repo を手動参照。
+
+**影響:** 複数 consumer で fetch 重複。prep 入口（mirror → PII → …）を platform 1 本で説明しにくい。一方で ingest を platform に寄せすぎると OAuth · 差分 sync でスコープ膨張。
+
+**関連 Phase:** TO-BE **Phase 0.5**（Source connector — 提案）
+
+**方針メモ（2026-06-21）:** Google Drive は techdev-cursor [`googledrive-connector.ts`](https://github.com/wombat2006/techdev-cursor/blob/master/src/services/googledrive-connector.ts) を platform へ移管・流用 — [O-P007-004](options/O-P007-004-googledrive-connector-reuse.md)
+
+---
+
+## P-008
+
+### RAG Vector 投入が利用側に閉じている
+
+**現象:** OpenAI Vector Store 等への chunk 投入は consumer（techdev-cursor `googledrive-connector.ts`）に実装があるが、platform 公式パスとして共通化されていない。prep 後の Vector 連携（Phase 4 hook）も未配線。
+
+**影響:** 「Drive → prep → RAG」を複数 consumer で再実装しがち。mirror だけ platform 化しても Vector 側がバラける。
+
+**関連 Phase:** TO-BE **Phase 4.5**（RAG Vector connector — 提案）— Drive 流用 connector の `vector` モードと一体
+
+---
+
 ## 追加用テンプレート
 
 ```markdown
