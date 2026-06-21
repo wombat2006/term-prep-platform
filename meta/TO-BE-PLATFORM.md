@@ -14,6 +14,7 @@ Related:
 [TODO.md](TODO.md)
 [glossary-pipeline/](glossary-pipeline/README.md)
 [docs/ARCHITECTURE.md](../docs/ARCHITECTURE.md)
+[docs/ROADMAP-AND-COSTS.md](../docs/ROADMAP-AND-COSTS.md) — 課題→ツール · コスト概算（計画のみ）
 
 ---
 

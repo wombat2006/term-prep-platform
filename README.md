@@ -27,7 +27,7 @@
 
 設計と骨格は揃っていますが、MCP の多くはこれから実装する段階です。いま動いているのは Phase 0 の `glossary_extractor` と設定スキーマ検証、`glossary-knowledge` MCP の stub です。
 
-アーキテクチャ図: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) · ロードマップ: [meta/TO-BE-PLATFORM.md](meta/TO-BE-PLATFORM.md) · 実行 TODO: [meta/TODO.md](meta/TODO.md)
+アーキテクチャ図: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) · ロードマップ: [meta/TO-BE-PLATFORM.md](meta/TO-BE-PLATFORM.md) · **方向性・コスト見積もり:** [docs/ROADMAP-AND-COSTS.md](docs/ROADMAP-AND-COSTS.md) · **実装比較:** [docs/IMPLEMENTATION-COMPARISON.md](docs/IMPLEMENTATION-COMPARISON.md) · 実行 TODO: [meta/TODO.md](meta/TODO.md)
 
 ---
 
@@ -217,6 +217,7 @@ term-prep-platform/
 ## 関連ドキュメント
 
 - [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — 提供範囲と UML 図
+- [docs/IMPLEMENTATION-COMPARISON.md](docs/IMPLEMENTATION-COMPARISON.md) — Phase · connector · AWS（EC2/EKS/ECS/SageMaker）比較
 - [meta/TO-BE-PLATFORM.md](meta/TO-BE-PLATFORM.md) — AS-IS / To-Be · ロードマップ
 - [meta/TODO.md](meta/TODO.md) — 実行チェックリスト
 - [meta/glossary-pipeline/PROBLEMS.md](meta/glossary-pipeline/PROBLEMS.md#p-007) — Source connector 課題

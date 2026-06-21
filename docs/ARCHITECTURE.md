@@ -18,6 +18,8 @@
 
 **成熟度:** 設計・骨格は揃った scaffold。Phase 0（extractor + schema）は動作中。Phase 0.5 は governance 起票済み・未実装。
 
+**実行方針（計画）:** 大規模 corpus は **batch job 優先**（LLM / Workers AI は Batch API）。mirror は **S3 または R2** · compute は **EC2 Spot / EKS または Cloudflare Containers** — [ROADMAP-AND-COSTS.md](ROADMAP-AND-COSTS.md)。
+
 ---
 
 ## Component diagram（UML — 提供範囲）
@@ -102,9 +104,9 @@ sequenceDiagram
   Platform->>Platform: JSON Schema 検証
   Platform->>MCP: （将来）PII → sanitize
   Platform->>Platform: fugashi extract → filter
-  Platform->>MCP: （任意）glossary-knowledge classify
+  Platform->>MCP: （任意）glossary-knowledge classify_batch
   Platform-->>Consumer: adopt.json · hold.json · registry（将来）
-  Consumer->>Consumer: RAG index / GLOSSARY / query expander 更新
+  Consumer->>Consumer: LLM Batch embed → RAG index / GLOSSARY 更新
 ```
 
 ---
@@ -216,6 +218,8 @@ consumer repos/              ← 本 repo の外
 ## References
 
 - [README.md](../README.md) — 提供範囲サマリ
+- [ROADMAP-AND-COSTS.md](ROADMAP-AND-COSTS.md) — **今後の方向性 · 課題→ツール対応 · コスト概算**（計画のみ）
+- [IMPLEMENTATION-COMPARISON.md](IMPLEMENTATION-COMPARISON.md) — **実装比較**（難易度 · 実現性 · コスト · メリデメ · AWS/CF）
 - [meta/schemas/README.md](../meta/schemas/README.md) — config schema・検証注意点
 - [techdev-cursor integration](integrations/techdev-cursor.md)
 - [dopagaki-transition integration](integrations/dopagaki-transition.md)

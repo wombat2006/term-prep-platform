@@ -100,4 +100,5 @@ Governance: [P-008](glossary-pipeline/PROBLEMS.md#p-008) · [O-P008-001](glossar
 ## 参照
 
 - [TO-BE-PLATFORM.md](TO-BE-PLATFORM.md) — AS-IS / To-Be · ロードマップ図
+- [docs/ROADMAP-AND-COSTS.md](../docs/ROADMAP-AND-COSTS.md) — 課題→ツール · 開発/運用コスト概算 · Confluence 10k ページ例
 - [glossary-pipeline/](glossary-pipeline/README.md) — PROBLEMS / OPTIONS / DECISIONS
