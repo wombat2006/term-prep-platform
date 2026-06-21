@@ -41,7 +41,7 @@ Living document
 
 ## D-001
 
-（予約 — Phase 0 採択時に記入）
+（予約 — Phase 0 採択済み 2026-06-21: O-P001-002 adopt/hold split, emit_reject false）
 
 **候補:**
 

@@ -16,6 +16,45 @@ Related:
 
 ---
 
+## エンドツーエンド目標フロー
+
+**Prep Platform として独立 repo 化する候補。** 社内データを consumer が ingest し、本 repo が前処理パイプラインを提供、**term registry** をハブに RAG・辞書・クエリ拡張へ fan-out する。
+
+```mermaid
+flowchart LR
+  subgraph ingest [Ingest]
+    D[社内データ]
+  end
+  subgraph prep [Prep Platform — 独立 repo 候補]
+    PII[PII MCP]
+    SAN[sanitize MCP]
+    EXT[extract]
+    NF[noise filter MCP]
+    REG[term registry]
+  end
+  subgraph out [Outputs]
+    RAG[RAG index]
+    GLO[glossary / bot dict]
+    QX[query expander]
+  end
+  D --> PII --> SAN --> EXT --> NF --> REG
+  REG --> RAG
+  REG --> GLO
+  REG --> QX
+  QX --> RAG
+```
+
+| フロー上の段 | 本 repo | 備考 |
+|---|---|---|
+| PII → sanitize | `mcp/pii-guard` · `mcp/sanitize` | ドキュメント単位。extract より前 |
+| extract → noise filter | `mcp/term-extract` · `mcp/glossary-knowledge` | 候補語抽出とノイズ分類 |
+| term registry | `scripts/glossary/registry.py` | TS / ADR / GLOSSARY seed。出口の正 |
+| Outputs | consumer PRJ | RAG は `--rag-index`（Phase 4）で接続 |
+
+**2 つの見方:** 上図は **データが流れる順**（ingest → prep → outputs）。下記「Core 内部」は **glossary_extractor が今実装している用語処理の順**（registry を seed として extract 前に読む）。最終的には上図の直列パイプラインに MCP + CLI を揃える。
+
+---
+
 ## 設計方針 — 入口は固定、ロジックは別立て
 
 **`scripts/glossary_extractor.py` は当面そのまま使う。** CLI・`--check`・exit code・config パスは **他 PRJ 共通の安定インタフェース** として維持する。
@@ -54,7 +93,7 @@ scripts/glossary/                 ← ロジック本体（別立てで改修・
 | 構成 | 単一 `glossary_extractor.py`（~500 行、CLI+全ロジック同居） |
 | 抽出 | fugashi + unidic-lite、名詞全量 + Markdown シグナル |
 | 設定 | `meta/glossary-config.json` — stop 語・manual_adopt・閾値 |
-| 出力 | 単一 `meta/glossary-candidates.json`（**adopt + hold + reject 全件**） |
+| 出力 | adopt / hold / reject 分割（`write_outputs`） | **done** — Phase 0 |
 | 正典 | 人間が `GLOSSARY.md` に反映 |
 
 ### 規模感（Accepted 原稿 7 ファイルのみ）
@@ -103,15 +142,17 @@ scripts/glossary/                 ← ロジック本体（別立てで改修・
 
 優先度順。**Phase 0–1 は CLI インタフェースを変えずに Core 分離と出力整理のみ。**
 
-### Phase 0 — 出力・リポジトリ衛生（Immediate）
+### Phase 0 — 出力・リポジトリ衛生（Immediate） — **Done (2026-06-21)**
 
-| ID | 改修 | 対象 | 完了条件 |
-|---|---|---|---|
-| T0-1 | **reject 非出力** — `filter.emit_reject: false` デフォルト | `filter.py`, config | reject が Git に載らない |
-| T0-2 | **出力分割** — adopt / hold / reject を別ファイル | `writers.py`, config | 3 パス設定可能 |
-| T0-3 | **`glossary-candidates.json` 廃止** — adopt+hold の slim 版に置換 | config, docs | 単一巨大 JSON なし |
-| T0-4 | **`.gitignore`** — `build/glossary/`, `build/rag/` | `.gitignore` | 生成物が commit されない |
-| T0-5 | **生成物の正典位置づけ** — docs に「adopt のみ追跡」と明記 | README, scripts/README | 誤コミット防止 |
+| ID | 改修 | 対象 | 完了条件 | Status |
+|---|---|---|---|---|
+| T0-1 | **reject 非出力** — `filter.emit_reject: false` デフォルト | extractor, config | reject が Git に載らない | **done** |
+| T0-2 | **出力分割** — adopt / hold / reject を別ファイル | `write_outputs`, config | 3 パス設定可能 | **done** |
+| T0-3 | **`glossary-candidates.json` 廃止** — adopt+hold の slim 版に置換 | config, docs | 単一巨大 JSON なし | **done** |
+| T0-4 | **`.gitignore`** — `build/glossary/`, legacy candidates | consumer `.gitignore` | 生成物が commit されない | **done** |
+| T0-5 | **生成物の正典位置づけ** — docs に「adopt のみ追跡」と明記 | README, integration docs | 誤コミット防止 | **done** |
+
+Consumers synced: **dopagaki-transition**, **techdev-cursor** (platform config + consumer `meta/`).
 
 ### Phase 1 — モジュール分離（Immediate〜Mid）
 
@@ -219,6 +260,8 @@ registry + rule filter **の後**、rank **の前**。Phase 0–1 完了後に�
 
 ## パイプライン TO-BE（Core 内部）
 
+エンドツーエンドの流れ（社内データ → PII → … → registry → RAG）は [エンドツーエンド目標フロー](#エンドツーエンド目標フロー) を参照。以下は **glossary_extractor Core** が段階的に実装する用語処理の内部順序。
+
 ```text
 [registry]  TS / ADR / GLOSSARY → seed（閉世界）
      ↓
@@ -231,8 +274,8 @@ registry + rule filter **の後**、rank **の前**。Phase 0–1 完了後に�
 [rank]      スコア, 複合語, 英日ペア
      ↓
 [writers]   adopt / hold / reject（分離）
-     ├─→ GLOSSARY.md（人間）
-     └─→ rag/（将来）
+     ├─→ GLOSSARY.md（人間）     … Outputs: glossary / bot dict
+     └─→ rag/（将来）            … Outputs: RAG index（query expander は consumer）
 ```
 
 ---

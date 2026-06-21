@@ -8,6 +8,6 @@ python scripts/glossary_extractor.py --config projects/dopagaki-transition/gloss
 
 Clone dopagaki as sibling or set `project_root` in config to absolute path.
 
-Output: `build/glossary/` (when Phase 0 writers land) or legacy path in config.
+**Phase 0 done:** outputs `meta/glossary-adopt.json` and `meta/glossary-hold.json` in consumer repo; `filter.emit_reject: false` (reject not in Git).
 
 See [docs/integrations/dopagaki-transition.md](../../docs/integrations/dopagaki-transition.md).

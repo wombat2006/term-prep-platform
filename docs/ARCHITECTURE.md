@@ -1,15 +1,60 @@
 # Architecture
 
+## Target flow (end-to-end)
+
+本 repo は **Prep Platform（独立 repo 候補）** として、社内データの RAG 載せ前処理を担う。入口の社内データと出口の RAG / 辞書 / クエリ拡張は **consumer PRJ** が保持する。
+
+```mermaid
+flowchart LR
+  subgraph ingest [Ingest]
+    D[社内データ]
+  end
+  subgraph prep [Prep Platform — term-prep-platform]
+    PII[PII MCP<br/>pii-guard]
+    SAN[sanitize MCP]
+    EXT[extract<br/>term-extract]
+    NF[noise filter MCP<br/>glossary-knowledge]
+    REG[term registry]
+  end
+  subgraph out [Outputs — consumer repos]
+    RAG[RAG index]
+    GLO[glossary / bot dict]
+    QX[query expander]
+  end
+  D --> PII --> SAN --> EXT --> NF --> REG
+  REG --> RAG
+  REG --> GLO
+  REG --> QX
+  QX --> RAG
+```
+
+| ノード | 役割 | 所在 |
+|---|---|---|
+| 社内データ | Drive export・原稿 MD・社内 Wiki 等 | consumer |
+| PII MCP | 個人情報の検出・マスク・フラグ | `mcp/pii-guard/` |
+| sanitize MCP | ポリシーに基づく redaction | `mcp/sanitize/` |
+| extract | 形態素・候補語の抽出 | `mcp/term-extract/` · `scripts/glossary/` |
+| noise filter MCP | general / domain / unknown 分類 | `mcp/glossary-knowledge/` |
+| term registry | TS / ADR / GLOSSARY 由来の閉世界 seed | `scripts/glossary/registry.py` |
+| RAG index | embedding・chunk 索引 | consumer（例: techdev-cursor） |
+| glossary / bot dict | 人間向け用語集・ボット辞書 JSON | consumer |
+| query expander | 検索クエリの用語展開 | consumer（registry を参照） |
+
+**query expander → RAG:** 展開されたクエリで RAG 検索精度を上げる（consumer 側の検索レイヤ）。
+
+---
+
 ## Model
 
 ```text
 Consumer repos (dopagaki, techdev-cursor, …)
+    │  corpus · GLOSSARY · RAG index · query expander
     │  projects/<name>/glossary-config.json
     │  .cursor/mcp.json → term-prep-platform MCPs
     ▼
-term-prep-platform
-    mcp/           … stdio servers (Python)
-    scripts/       … batch CLI
+term-prep-platform  （Prep Platform — 独立 repo 候補）
+    mcp/           … stdio servers (Python): PII → sanitize → extract → noise filter
+    scripts/       … batch CLI · term registry
     meta/          … governance + TO-BE
 ```
 
@@ -17,13 +62,16 @@ term-prep-platform
 
 ---
 
-## Pipeline (target)
+## Implementation status
 
-```text
-ingest → pii-guard → sanitize → term-extract → glossary-knowledge → registry → RAG / bot dict
-```
-
-Phase 0 (now): `glossary-knowledge` stub + `glossary_extractor` CLI.
+| Stage | Status |
+|---|---|
+| PII MCP | planned |
+| sanitize MCP | planned |
+| extract | `glossary_extractor` CLI（部分）· term-extract MCP planned |
+| noise filter MCP | `glossary-knowledge` stub |
+| term registry | Phase 1（`scripts/glossary/` 分離予定） |
+| Outputs | consumer 側 — registry 成果物を受け取る |
 
 ---
 

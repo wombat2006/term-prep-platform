@@ -249,7 +249,7 @@ CLI config:
 | 成果物 | [mcp/glossary-knowledge/](../mcp/glossary-knowledge/) — NullProvider stub、4 tools |
 | 未実装（defer） | cache、第一 provider、glossary CLI 連携 |
 | 再開条件 | Phase 0–1 完了後、Phase 2.5 着手時 |
-| 先行作業 | Phase 0 出力分割、registry seed-first |
+| 先行作業 | Phase 0 出力分割 — **done** (2026-06-21); registry seed-first — pending |
 
 **棄却せず保留:** K-003 / K-006 / K-008 の第一プロバイダ選定 — 別 RL または D-003 で再開。
 
@@ -264,7 +264,7 @@ CLI config:
 | 3 | `mcp/glossary-knowledge/` stub | **done** |
 | 4 | 第一 provider 選定 | **deferred** |
 | 5 | `glossary-config.json` knowledge_filter 節 | deferred（Phase 2.5） |
-| 6 | Phase 0（出力分割） | pending（別 track） |
+| 6 | Phase 0（出力分割） | **done** (dopagaki + techdev-cursor consumers) |
 
 ---
 

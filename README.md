@@ -12,6 +12,47 @@ Initial extract from [dopagaki-transition](https://github.com/wombat2006/dopagak
 
 ---
 
+## 目指すフロー
+
+**社内データ → 前処理（本 repo）→ 用語レジストリ → RAG / 辞書 / クエリ拡張** を一貫させる。**Prep Platform として独立 repo 化する候補** — consumer PRJ は corpus・正典・RAG 索引を持ち、前処理ロジックはここに集約する。
+
+```mermaid
+flowchart LR
+  subgraph ingest [Ingest]
+    D[社内データ]
+  end
+  subgraph prep [Prep Platform — 独立 repo 候補]
+    PII[PII MCP]
+    SAN[sanitize MCP]
+    EXT[extract]
+    NF[noise filter MCP]
+    REG[term registry]
+  end
+  subgraph out [Outputs]
+    RAG[RAG index]
+    GLO[glossary / bot dict]
+    QX[query expander]
+  end
+  D --> PII --> SAN --> EXT --> NF --> REG
+  REG --> RAG
+  REG --> GLO
+  REG --> QX
+  QX --> RAG
+```
+
+| ステージ | 本 repo の対応 | 状態 |
+|---|---|---|
+| PII MCP | [mcp/pii-guard/](mcp/pii-guard/) | planned |
+| sanitize MCP | [mcp/sanitize/](mcp/sanitize/) | planned |
+| extract | [mcp/term-extract/](mcp/term-extract/) · `scripts/glossary_extractor.py` | planned / 部分実装 |
+| noise filter MCP | [mcp/glossary-knowledge/](mcp/glossary-knowledge/) | stub |
+| term registry | `scripts/glossary/registry.py`（Phase 1 以降） | planned |
+| RAG index · glossary · query expander | 各 consumer PRJ（例: [techdev-cursor](projects/techdev-cursor/)） | consumer 側 |
+
+詳細: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) · [meta/TO-BE-PLATFORM.md](meta/TO-BE-PLATFORM.md)
+
+---
+
 ## 何をする repo か
 
 | 層 | 本 repo | 各 consumer PRJ |
@@ -40,8 +81,11 @@ python scripts/glossary_extractor.py --check --config projects/dopagaki-transiti
 
 # MCP provider stub（pip 不要の部分）
 cd mcp/glossary-knowledge && PYTHONPATH=. python -c "
-from glossary_knowledge_mcp.providers import ProviderRegistry
-print(ProviderRegistry.from_config().classify('探索').to_dict())
+from glossary_knowledge_mcp.server import classify_term, list_providers
+print(list_providers())
+r = classify_term('探索', domain='attention-economics')
+assert r['label'] == 'unknown'
+print('OK:', r)
 "
 ```
 
@@ -65,12 +109,14 @@ term-prep-platform/
 
 ## MCP（現状）
 
-| Server | Status | Tools |
-|---|---|---|
-| [glossary-knowledge](mcp/glossary-knowledge/) | **stub** (NullProvider) | `classify_term`, `classify_batch`, … |
-| term-extract | planned | — |
-| pii-guard | planned | — |
-| sanitize | planned | — |
+パイプライン順（[目指すフロー](#目指すフロー)）:
+
+| Server | Flow stage | Status | Tools |
+|---|---|---|---|
+| [pii-guard](mcp/pii-guard/) | PII | planned | — |
+| [sanitize](mcp/sanitize/) | sanitize | planned | — |
+| term-extract | extract | planned | — |
+| [glossary-knowledge](mcp/glossary-knowledge/) | noise filter | **stub** (NullProvider) | `classify_term`, `classify_batch`, … |
 
 ---
 

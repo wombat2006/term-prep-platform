@@ -31,10 +31,22 @@ source .venv/bin/activate
 python -m pip install -r requirements-mcp.txt
 ```
 
-Provider logic smoke test (no MCP SDK call):
+Provider logic smoke test (`classify_term` tool — no stdio MCP session):
 
 ```bash
 cd mcp/glossary-knowledge
+PYTHONPATH=. python -c "
+from glossary_knowledge_mcp.server import classify_term, list_providers
+print('providers:', list_providers())
+r = classify_term('Wall-Bounce', context='multi-LLM', domain='devassist-platform')
+assert r['label'] == 'unknown' and r['provider_id'] == 'null'
+print('OK:', r)
+"
+```
+
+Lower-level provider test (optional):
+
+```bash
 PYTHONPATH=. python -c "
 from glossary_knowledge_mcp.providers import ProviderRegistry
 print(ProviderRegistry.from_config().classify('探索').to_dict())
