@@ -7,7 +7,7 @@
     "required": true
   },
   "corpus": {
-    "description": "In-repo platform docs (interim until Google Drive local mirror path is set)",
+    "description": "In-repo platform docs (interim). When source.enabled=true, use build/corpus/drive/**/*.md globs after sync_corpus.",
     "files": [
       "AGENTS.md",
       "README.md",
@@ -21,6 +21,14 @@
       "docs/DEVELOPMENT_GUIDE.md",
       "meta/TO-BE-GLOSSARY-PIPELINE.md"
     ]
+  },
+  "source": {
+    "enabled": false,
+    "adapter": "googledrive",
+    "local_mirror": "build/corpus/drive",
+    "googledrive": {
+      "folder_id": ""
+    }
   },
   "reference_catalogs": [
     "config/fork/devassist-dictionary-v0.json",

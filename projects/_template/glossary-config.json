@@ -8,8 +8,16 @@
     "required": true
   },
   "corpus": {
-    "description": "Markdown files to scan — list paths relative to project_root",
+    "description": "Markdown files to scan — paths relative to project_root (glob patterns supported)",
     "files": []
+  },
+  "source": {
+    "enabled": false,
+    "adapter": "googledrive",
+    "local_mirror": "build/corpus/drive",
+    "googledrive": {
+      "folder_id": ""
+    }
   },
   "reference_catalogs": [],
   "filter": {

@@ -2,6 +2,10 @@
 
 Consumer: [wombat2006/techdev-cursor](https://github.com/wombat2006/techdev-cursor)
 
+**Consumer read pack (platform progress):** [meta/consumer-handoff/README.md](../../meta/consumer-handoff/README.md) · [techdev-cursor checklist](../../meta/consumer-handoff/consumers/techdev-cursor.md) · **[consumer PR spec](../../meta/consumer-handoff/04-consumer-pr-guide-techdev-cursor.md)** (platform does not edit consumer repo)
+
+**Platform implementation:** [05-platform-implementation.md](../../meta/consumer-handoff/05-platform-implementation.md)
+
 ---
 
 ## Role in platform flow
@@ -41,7 +45,28 @@ Also: expand [devassist-dictionary-v0.json](https://github.com/wombat2006/techde
 
 Consumer copy in repo: [techdev-cursor/meta/glossary-config.json](https://github.com/wombat2006/techdev-cursor/blob/master/meta/glossary-config.json)
 
-Set `corpus.files` when Drive sync local mirror path is fixed.
+Set `corpus.files` when Google Drive sync local path is defined. Phase 0.5 mirror: [connectors/googledrive](../../connectors/googledrive/).
+
+```bash
+# 1. Build Drive connector (once)
+cd connectors/googledrive && npm install && npm run build
+
+# 2. Sync Drive → consumer build/corpus/drive (set source.enabled + folder_id in config)
+python scripts/sync_corpus.py --config projects/techdev-cursor/glossary-config.json
+
+# 3. Extract (platform) or consumer: npm run glossary:extract
+python scripts/glossary_extractor.py --config projects/techdev-cursor/glossary-config.json
+```
+
+When `source.enabled` is true, set `corpus.files` to globs such as `build/corpus/drive/**/*.md`.
+
+### Testing (Phase 0.5)
+
+**Credential-free (run now):** `bash scripts/run_phase05_checks.sh` — build, schema, glob resolution, CLI credential guards.
+
+**Consumer PR (wiring only, no OAuth):** [meta/consumer-handoff/04-consumer-pr-guide-techdev-cursor.md](../../meta/consumer-handoff/04-consumer-pr-guide-techdev-cursor.md)
+
+**With real Drive OAuth (deferred):** enable `source` in consumer config, set env vars, run `glossary:sync` then extract. Not executed in default checks.
 
 **Phase 0.5:** Google Drive corpus mirror は platform へ移管する **techdev-cursor [`googledrive-connector.ts`](https://github.com/wombat2006/techdev-cursor/blob/master/src/services/googledrive-connector.ts) の流用**が推奨方針（mirror モード）— [O-P007-004](../../meta/glossary-pipeline/options/O-P007-004-googledrive-connector-reuse.md)。
 

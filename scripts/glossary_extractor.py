@@ -209,6 +209,34 @@ def project_root_from_config(config_path: Path, config: dict) -> Path:
     return (config_path.parent / rel).resolve()
 
 
+def resolve_corpus_files(root: Path, patterns: list[str]) -> list[Path]:
+    """Resolve corpus path entries; supports glob patterns relative to project_root."""
+    resolved: list[Path] = []
+    seen: set[Path] = set()
+
+    for entry in patterns:
+        if any(ch in entry for ch in "*?[]"):
+            matches = sorted(p for p in root.glob(entry) if p.is_file())
+            if not matches:
+                raise FileNotFoundError(f"No corpus files matched glob: {root / entry}")
+            for path in matches:
+                canonical = path.resolve()
+                if canonical not in seen:
+                    resolved.append(canonical)
+                    seen.add(canonical)
+        else:
+            path = (root / entry).resolve()
+            if not path.exists():
+                raise FileNotFoundError(f"Corpus file not found: {path}")
+            if path not in seen:
+                resolved.append(path)
+                seen.add(path)
+
+    if not resolved:
+        raise FileNotFoundError("corpus.files is empty or matched no files")
+    return resolved
+
+
 def load_glossary_terms(glossary_path: Path) -> set[str]:
     if not glossary_path.exists():
         return set()
@@ -520,10 +548,7 @@ def run(config_path: Path) -> dict:
 
     backend = create_morphology_backend(config)
 
-    corpus_files = [(root / f).resolve() for f in config["corpus"]["files"]]
-    for p in corpus_files:
-        if not p.exists():
-            raise FileNotFoundError(f"Corpus file not found: {p}")
+    corpus_files = resolve_corpus_files(root, config["corpus"]["files"])
 
     catalog_paths = [(root / p).resolve() for p in config.get("reference_catalogs", [])]
     glossary_path = root / "GLOSSARY.md"

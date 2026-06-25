@@ -135,6 +135,34 @@
     "manual_reject": {
       "type": "array",
       "items": { "type": "string", "minLength": 1 }
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "adapter": { "type": "string", "enum": ["googledrive", "s3"] },
+        "local_mirror": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Directory under project_root for mirrored corpus files"
+        },
+        "googledrive": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "folder_id": {
+              "type": "string",
+              "description": "Google Drive folder ID; required when source.enabled is true (or set GOOGLE_DRIVE_FOLDER_ID)"
+            },
+            "batch_size": { "type": "integer", "minimum": 1 }
+          }
+        },
+        "s3": {
+          "type": "object",
+          "additionalProperties": true
+        }
+      }
     }
   }
 }

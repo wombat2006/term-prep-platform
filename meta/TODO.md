@@ -8,6 +8,8 @@ Living checklist — [TO-BE-PLATFORM.md](TO-BE-PLATFORM.md) の実行用サマ�
 
 **最終更新:** 2026-06-21
 
+**Consumer handoff:** 進捗・schema・consumer 側作業は [meta/consumer-handoff/](../consumer-handoff/README.md) を更新すること。
+
 ---
 
 ## 凡例
@@ -39,14 +41,15 @@ Governance: [P-007](glossary-pipeline/PROBLEMS.md#p-007) · [OPTIONS § P-007](g
 
 ### 0.5-0 — 設計・governance
 
-- [ ] `SourceConnector` 最小 contract（list · sync · local_root）— S3 / 汎用は Python
-- [ ] `glossary-config` に `source` 節の schema 案
-- [ ] googledrive 流用の移管計画（platform `connectors/googledrive/` · consumer re-export）
+- [x] `SourceConnector` 最小 contract（list · sync · local_root）— S3 / 汎用は Python
+- [x] `glossary-config` に `source` 節の schema 案
+- [~] googledrive 流用の移管計画（platform `connectors/googledrive/` · consumer re-export）
 
 ### 0.5-1 — ローカル mirror contract
 
-- [ ] `build/corpus/` を Git 外 staging として docs に定義
-- [ ] `corpus.files` が mirror 相対パスを指す例を `_template` に追加
+- [x] `build/corpus/` を Git 外 staging として docs に定義
+- [x] `corpus.files` が mirror 相対パスを指す例を `_template` に追加
+- [x] `corpus.files` glob 対応（`glossary_extractor`）
 
 ### 0.5-2 — S3 / 互換ストレージ adapter
 
@@ -56,10 +59,12 @@ Governance: [P-007](glossary-pipeline/PROBLEMS.md#p-007) · [OPTIONS § P-007](g
 
 ### 0.5-3 — Google Drive（googledrive-connector 流用）
 
-- [ ] platform `connectors/googledrive/` に techdev-cursor から移管
-- [ ] **`mirror` モード** — Vector 非経由で `build/corpus/` へ sync
-- [ ] techdev-cursor が platform パッケージを参照するよう更新（利用側 PR）
-- [ ] prep 連携 smoke: mirror → `glossary_extractor`
+- [x] platform `connectors/googledrive/` に mirror モード実装（TS · consumer パターン流用）
+- [x] **`mirror` モード** — Vector 非経由で `build/corpus/drive/` へ sync
+- [x] `scripts/sync_corpus.py` — config `source` から mirror 起動
+- [ ] techdev-cursor が platform パッケージを参照するよう更新（利用側 PR — **ユーザー適用**）
+- [ ] prep 連携 smoke: mirror → `glossary_extractor`（**要 Drive 認証 — 後日実施**）
+- [x] credential なしテスト — `scripts/run_phase05_checks.sh` · `tests/test_phase05_no_credentials.py` · `connectors/googledrive` `npm test`
 
 ---
 
@@ -101,5 +106,6 @@ Governance: [P-008](glossary-pipeline/PROBLEMS.md#p-008) · [O-P008-001](glossar
 ## 参照
 
 - [TO-BE-PLATFORM.md](TO-BE-PLATFORM.md) — AS-IS / To-Be · ロードマップ図
+- [consumer-handoff/](consumer-handoff/README.md) — consumer 向け進捗・作業リスト
 - [docs/ROADMAP-AND-COSTS.md](../docs/ROADMAP-AND-COSTS.md) — 課題→ツール · 開発/運用コスト概算 · Confluence 10k ページ例
 - [glossary-pipeline/](glossary-pipeline/README.md) — PROBLEMS / OPTIONS / DECISIONS

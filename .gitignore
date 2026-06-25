@@ -1,10 +1,16 @@
 .DS_Store
-.cursor/
+.cursor/*
+!.cursor/agents/
+!.cursor/agents/**
+!.cursor/skills/
+!.cursor/skills/**
 .vscode/
 .venv/
 __pycache__/
 *.py[cod]
 *.log
 build/
+connectors/googledrive/node_modules/
+connectors/googledrive/dist/
 projects/*/glossary-candidates.json
 mcp/glossary-knowledge/providers.json

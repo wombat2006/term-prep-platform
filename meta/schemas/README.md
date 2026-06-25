@@ -8,6 +8,8 @@ Schema:
 
 Platform scope（本 repo が RAG 本体を提供しない理由含む）: [docs/ARCHITECTURE.md](../../docs/ARCHITECTURE.md#scope--この-prj-が提供するもの)
 
+Schema 変更時は consumer 向け [consumer-handoff/02-schema-and-cli.md](../consumer-handoff/02-schema-and-cli.md) と [CHANGELOG.md](../consumer-handoff/CHANGELOG.md) も更新すること。
+
 ---
 
 ## 役割

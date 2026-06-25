@@ -1,0 +1,31 @@
+name: Consumer handoff notify
+
+# Step C of A+C hybrid: open Issue on consumer when platform handoff docs change.
+# Requires repository secret: CROSS_REPO_GH_TOKEN (issues:write on consumer repo)
+
+on:
+  push:
+    branches: [main, master]
+    paths:
+      - 'meta/consumer-handoff/**'
+  workflow_dispatch:
+
+jobs:
+  notify-consumer:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Notify consumer (GitHub Issue)
+        env:
+          CROSS_REPO_GH_TOKEN: ${{ secrets.CROSS_REPO_GH_TOKEN }}
+          CONSUMER_REPO: ${{ vars.CONSUMER_REPO || 'wombat2006/techdev-cursor' }}
+          PLATFORM_REF: ${{ github.sha }}
+        run: |
+          if [[ -z "${CROSS_REPO_GH_TOKEN:-}" ]]; then
+            echo "skip: CROSS_REPO_GH_TOKEN not configured"
+            exit 0
+          fi
+          chmod +x scripts/cross_repo/notify_consumer_issue.sh
+          ./scripts/cross_repo/notify_consumer_issue.sh

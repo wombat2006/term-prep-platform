@@ -79,11 +79,34 @@ Exit codes: `0` success · `1` config / IO / **JSON Schema 不一致** · `2` mo
 
 ---
 
+## sync_corpus.py (Phase 0.5)
+
+Sync external corpus into consumer `project_root` before extract. Google Drive uses [connectors/googledrive](../connectors/googledrive/).
+
+```bash
+cd connectors/googledrive && npm install && npm run build
+export GOOGLE_CLIENT_ID=... GOOGLE_CLIENT_SECRET=... GOOGLE_REFRESH_TOKEN=...
+
+# No-credential checks (schema, globs, credential guards):
+bash scripts/run_phase05_checks.sh
+
+python scripts/sync_corpus.py --check --config projects/techdev-cursor/glossary-config.json
+python scripts/sync_corpus.py --config projects/techdev-cursor/glossary-config.json  # needs OAuth — deferred
+```
+
+Requires `source.enabled: true` and `source.googledrive.folder_id` in glossary-config.  
+`corpus.files` may use globs (e.g. `build/corpus/drive/**/*.md`).
+
+---
+
 ## File roles
 
 | File | Role |
 |---|---|
 | `scripts/glossary_extractor.py` | Shared extraction CLI |
+| `scripts/sync_corpus.py` | Drive/S3 mirror CLI (Phase 0.5) |
+| `scripts/connectors/` | Source connector adapters |
+| `connectors/googledrive/` | Google Drive mirror (TypeScript) |
 | `meta/schemas/glossary-config.schema.json` | Config JSON Schema (validated on load) |
 | `projects/<consumer>/glossary-config.json` | Per-project corpus & scoring |
 | `build/glossary/` | Generated adopt/hold/reject (Git ignored) |

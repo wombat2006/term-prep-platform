@@ -27,7 +27,7 @@
 
 設計と骨格は揃っていますが、MCP の多くはこれから実装する段階です。いま動いているのは Phase 0 の `glossary_extractor` と設定スキーマ検証、`glossary-knowledge` MCP の stub です。
 
-アーキテクチャ図: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) · ロードマップ: [meta/TO-BE-PLATFORM.md](meta/TO-BE-PLATFORM.md) · **方向性・コスト見積もり:** [docs/ROADMAP-AND-COSTS.md](docs/ROADMAP-AND-COSTS.md) · **実装比較:** [docs/IMPLEMENTATION-COMPARISON.md](docs/IMPLEMENTATION-COMPARISON.md) · 実行 TODO: [meta/TODO.md](meta/TODO.md)
+アーキテクチャ図: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) · ロードマップ: [meta/TO-BE-PLATFORM.md](meta/TO-BE-PLATFORM.md) · **方向性・コスト見積もり:** [docs/ROADMAP-AND-COSTS.md](docs/ROADMAP-AND-COSTS.md) · **実装比較:** [docs/IMPLEMENTATION-COMPARISON.md](docs/IMPLEMENTATION-COMPARISON.md) · 実行 TODO: [meta/TODO.md](meta/TODO.md) · **consumer 向け進捗:** [meta/consumer-handoff/README.md](meta/consumer-handoff/README.md)
 
 ---
 
@@ -38,6 +38,7 @@
 | 例 | term-prep-platform | [techdev-cursor](https://github.com/wombat2006/techdev-cursor)、[dopagaki-transition](https://github.com/wombat2006/dopagaki-transition) |
 | 持つもの | MCP · CLI · schema · **connectors（提案）** | corpus · 正典 · query expander |
 | 接続 | `.cursor/mcp.json` · npm connector scripts | `glossary-config.json` |
+| **進捗の読み取り** | [meta/consumer-handoff/](meta/consumer-handoff/README.md) を consumer が sibling から参照 | [platform-integration](https://github.com/wombat2006/techdev-cursor/blob/master/meta/platform-integration/README.md) を platform が参照 |
 
 本リポジトリが出力する adopt / hold JSON や（将来の）term registry を、各利用側が RAG・辞書・クエリ拡張に接続します。
 

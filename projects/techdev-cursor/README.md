@@ -2,9 +2,11 @@
 
 Consumer: [techdev-cursor](https://github.com/wombat2006/techdev-cursor)
 
+**Consumer agents:** read platform progress at [meta/consumer-handoff/consumers/techdev-cursor.md](../../meta/consumer-handoff/consumers/techdev-cursor.md). **Open consumer PR using** [04-consumer-pr-guide-techdev-cursor.md](../../meta/consumer-handoff/04-consumer-pr-guide-techdev-cursor.md) — platform does not edit techdev-cursor.
+
 Phase 0: adopt/hold output split, `filter` / `output` / `knowledge_filter` schema aligned with dopagaki-transition. Config は起動時に platform schema で検証（[注意点](../../meta/schemas/README.md)）。
 
-Fill `corpus.files` when Google Drive sync local path is defined.
+Fill `corpus.files` when Google Drive sync local path is defined — see Phase 0.5 mirror below.
 
 Export target (planned): `config/fork/devassist-dictionary-v0.json`
 
