@@ -54,6 +54,11 @@ meta/glossary-pipeline/
   mcp/                   … Knowledge Filter MCP 仕様（portable）
   glossary-config.template.json
 
+meta/contracts/            … Plan B contract canon（domain/surface/SPI）
+  README.md
+  http/openapi.yaml
+  sse/event-envelope.schema.json
+
 meta/schemas/              … glossary-config JSON Schema（CLI 起動時検証）
   README.md
   glossary-config.schema.json
@@ -161,7 +166,7 @@ OPTIONS.md インデックス更新
 | [P-007](PROBLEMS.md#p-007) | 外部 corpus fetch の分散 | [OPTIONS.md](OPTIONS.md#p-007) |
 | [P-008](PROBLEMS.md#p-008) | RAG Vector 投入の共通化 | [OPTIONS.md](OPTIONS.md#p-008) |
 
-採択済み: [DECISIONS.md](DECISIONS.md) — [D-002](DECISIONS.md#d-002) Knowledge Filter MCP（stub、closed）
+採択済み: [DECISIONS.md](DECISIONS.md) — [D-002](DECISIONS.md#d-002) Knowledge Filter MCP（stub、closed）・[D-005](DECISIONS.md#d-005) Plan B contract-first canon
 
 Research Log: [RL-20260621-knowledge-filter-mcp](../../research-log/RL-20260621-knowledge-filter-mcp.md) — **Closed**
 

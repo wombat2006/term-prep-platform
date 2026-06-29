@@ -9,16 +9,19 @@ Copy to `consumers/<project-id>.md` when onboarding a new consumer.
 | Field | Value |
 |-------|-------|
 | Consumer repo | `<org>/<repo>` |
-| Platform mirror | `projects/<project-id>/glossary-config.json` |
+| Package pin | `term-prep-platform==X.Y.Z` |
 | Integration doc | `docs/integrations/<project-id>.md` |
 
 ---
 
 ## Read order
 
-1. `../term-prep-platform/meta/consumer-handoff/README.md`
-2. Steps 01 → 03 in this pack
-3. Consumer-specific boundary docs (if any)
+1. [../../CONSUMER_HANDOFF.md](../../CONSUMER_HANDOFF.md) — top entry point (start here)
+2. [../01-platform-status.md](../01-platform-status.md) — phase status
+3. [../02-schema-and-cli.md](../02-schema-and-cli.md) — schema + CLI
+4. [../04-consumer-pr-guide-techdev-cursor.md](../04-consumer-pr-guide-techdev-cursor.md) — PR template
+5. [../03-consumer-actions.md](../03-consumer-actions.md) — checklist
+6. [../../contracts/README.md](../../contracts/README.md) — Plan B contracts (future reference)
 
 ---
 
@@ -30,11 +33,12 @@ Copy to `consumers/<project-id>.md` when onboarding a new consumer.
 | Config schema | | | |
 | Source connector | | | |
 | MCP | | | |
+| Plan B contract tracking (`meta/contracts/*`) | | | |
 
 ---
 
 ## Open items
 
-- [ ] Register MCP
+- [ ] Register MCP command (`term-prep-glossary-knowledge-mcp`)
 - [ ] Align `meta/glossary-config.json`
-- [ ] Add DOCUMENTATION_INDEX pointer
+- [ ] Add contract CI check

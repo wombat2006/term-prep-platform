@@ -6,9 +6,11 @@ term-prep-platform
 Status:
 Living checklist — [TO-BE-PLATFORM.md](TO-BE-PLATFORM.md) の実行用サマリ
 
-**最終更新:** 2026-06-21
+**最終更新:** 2026-06-29
 
 **Consumer handoff:** 進捗・schema・consumer 側作業は [meta/consumer-handoff/](../consumer-handoff/README.md) を更新すること。
+
+**Decoupling:** D-004（artifact boundary / package contract）を正とする。sibling 追従と cross-repo bot は deprecated。
 
 ---
 
@@ -81,6 +83,29 @@ Governance: [P-008](glossary-pipeline/PROBLEMS.md#p-008) · [O-P008-001](glossar
 
 ---
 
+## Decoupling migration（D-004）
+
+- [x] 採択ログ（D-004）と option 文書（O-P009-001）を追加
+- [x] package entrypoint（`term-prep-extract`, `term-prep-sync`, `term-prep-glossary-knowledge-mcp`）を実装
+- [x] cross-repo bot / sibling mirror assets を削除
+- [x] consumer cutover PR ガイドを package 契約へ更新
+- [x] contract check CLI + consumer CI template を追加
+- [ ] techdev-cursor 側 PR で package pin へ切替（ユーザー適用）
+
+---
+
+## Plan B prep（D-005, contract-first）
+
+- [x] `b0-contract-canon` 実装契約（domain / error / version policy）を canonical spec に固定
+- [x] `b0-surface-spec` MCP / HTTP / SSE / CLI の surface contract と互換性ルールを定義
+- [x] `b0-connector-sdk` Connector SPI / conformance 要件を定義
+- [ ] `b1-service-skeleton` 契約準拠 service skeleton（HTTP + SSE + MCP adapter）最小実装
+- [ ] `b1-consumer-adapter` techdev-cursor adapter を契約準拠で置換（feature flag）
+- [ ] `b1-contract-ci` compatibility matrix / backward-compat CI を導入
+- [ ] `b2-consumer-handoff` 方針・計画・影響を consumer へ継続伝達
+
+---
+
 ## Phase 1 — Core 分離
 
 - [ ] `scripts/glossary/` パッケージ化（T1-1）
@@ -109,3 +134,4 @@ Governance: [P-008](glossary-pipeline/PROBLEMS.md#p-008) · [O-P008-001](glossar
 - [consumer-handoff/](consumer-handoff/README.md) — consumer 向け進捗・作業リスト
 - [docs/ROADMAP-AND-COSTS.md](../docs/ROADMAP-AND-COSTS.md) — 課題→ツール · 開発/運用コスト概算 · Confluence 10k ページ例
 - [glossary-pipeline/](glossary-pipeline/README.md) — PROBLEMS / OPTIONS / DECISIONS
+- [contracts/](contracts/README.md) — Plan B contract canon（domain/surface/SPI）

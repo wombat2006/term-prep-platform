@@ -35,6 +35,8 @@ Living document
 | O-P007-003 | P-007 | rclone ラッパーのみ | proposed | Phase 0.5 軽量版 |
 | O-P007-004 | P-007 | **googledrive-connector.ts 流用** | **proposed（推奨方針）** | mirror / vector モード |
 | O-P008-001 | P-008 | Platform RAG Vector connector | proposed | Phase 4.5 |
+| O-P009-001 | P-009 | Artifact boundary / package contract | adopted | sibling 依存除去 + Semver |
+| O-P009-002 | P-009-B | Plan B contract-first canon | adopted | Remote service 実装前に Domain/Surface/SPI 固定 |
 
 ---
 
@@ -133,6 +135,26 @@ RAG Vector 投入が利用側に閉じている
 | 案 | メリット | デメリット | Status |
 |---|---|---|---|
 | [O-P008-001](options/O-P008-001-rag-vector-connector.md) | fetch·prep·Vector を 1 ストーリー | platform スコープ拡大 | proposed |
+
+---
+
+## P-009 {#p-009}
+
+repo 間追従による連鎖破綻リスク（decoupling）
+
+| 案 | メリット | デメリット | Status |
+|---|---|---|---|
+| [O-P009-001](options/O-P009-001-artifact-boundary-semver.md) | 初期コスト低、導入が速い、Semver 運用に乗る | Remote 実行形態は未提供 | adopted |
+
+---
+
+## P-009-B {#p-009-b}
+
+Remote service 実装時の契約未固定リスク
+
+| 案 | メリット | デメリット | Status |
+|---|---|---|---|
+| [O-P009-002](options/O-P009-002-contract-first-service-canon.md) | API/CLI/MCP/SSE の payload 分岐を防ぐ | 初期に仕様策定コストが必要 | adopted |
 
 ---
 

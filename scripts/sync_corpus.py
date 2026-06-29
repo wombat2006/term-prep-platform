@@ -6,7 +6,7 @@ Phase 0.5: Google Drive via connectors/googledrive (mirror mode).
 
 Usage:
     python scripts/sync_corpus.py --config meta/glossary-config.json
-    python scripts/sync_corpus.py --config projects/techdev-cursor/glossary-config.json
+    python scripts/sync_corpus.py --config /path/to/consumer/meta/glossary-config.json
 
 Requires glossary-config `source` section with enabled=true.
 """

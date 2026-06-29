@@ -53,13 +53,13 @@ python -m pip install -r requirements-mcp.txt
 Extract glossary candidates from Markdown using **fugashi + unidic-lite**.
 
 ```bash
-# Default config path: meta/glossary-config.json (legacy)
-# Consumer configs live under projects/
-python scripts/glossary_extractor.py --check \
-  --config projects/dopagaki-transition/glossary-config.json
+# Package contract (recommended)
+term-prep-extract --check --config /path/to/consumer/meta/glossary-config.json
 
-python scripts/glossary_extractor.py \
-  --config projects/dopagaki-transition/glossary-config.json
+term-prep-extract --config /path/to/consumer/meta/glossary-config.json
+
+# Direct script (platform development only)
+python scripts/glossary_extractor.py --check --config projects/dopagaki-transition/glossary-config.json
 ```
 
 **Governance:** [meta/glossary-pipeline/](../meta/glossary-pipeline/README.md)  
@@ -90,8 +90,8 @@ export GOOGLE_CLIENT_ID=... GOOGLE_CLIENT_SECRET=... GOOGLE_REFRESH_TOKEN=...
 # No-credential checks (schema, globs, credential guards):
 bash scripts/run_phase05_checks.sh
 
-python scripts/sync_corpus.py --check --config projects/techdev-cursor/glossary-config.json
-python scripts/sync_corpus.py --config projects/techdev-cursor/glossary-config.json  # needs OAuth — deferred
+term-prep-sync --check --config /path/to/consumer/meta/glossary-config.json
+term-prep-sync --config /path/to/consumer/meta/glossary-config.json  # needs OAuth — deferred
 ```
 
 Requires `source.enabled: true` and `source.googledrive.folder_id` in glossary-config.  
@@ -108,5 +108,5 @@ Requires `source.enabled: true` and `source.googledrive.folder_id` in glossary-c
 | `scripts/connectors/` | Source connector adapters |
 | `connectors/googledrive/` | Google Drive mirror (TypeScript) |
 | `meta/schemas/glossary-config.schema.json` | Config JSON Schema (validated on load) |
-| `projects/<consumer>/glossary-config.json` | Per-project corpus & scoring |
+| `meta/glossary-config.json` (consumer) | Consumer-side runtime config |
 | `build/glossary/` | Generated adopt/hold/reject (Git ignored) |

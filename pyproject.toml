@@ -1,9 +1,29 @@
 [project]
 name = "term-prep-platform"
-version = "0.1.0"
+version = "1.0.0"
 description = "MCP-based data prep for RAG — terminology extraction, noise filtering, document cleanup"
 readme = "README.md"
 requires-python = ">=3.10"
+dependencies = [
+  "fugashi>=1.3.0",
+  "unidic-lite>=1.0.8",
+  "jsonschema>=4.23.0",
+  "mcp>=1.12.0",
+]
+
+[project.scripts]
+term-prep-extract = "term_prep_platform.cli:extract"
+term-prep-sync = "term_prep_platform.cli:sync"
+term-prep-glossary-knowledge-mcp = "term_prep_platform.cli:glossary_knowledge_mcp"
+term-prep-contract-check = "term_prep_platform.cli:contract_check"
+
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
 
 [tool.setuptools]
-packages = []
+include-package-data = true
+
+[tool.setuptools.packages.find]
+where = ["src", ".", "mcp/glossary-knowledge"]
+include = ["term_prep_platform*", "scripts*", "glossary_knowledge_mcp*"]

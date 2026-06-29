@@ -15,6 +15,8 @@ Living document
 |---|---|---|---|---|
 | D-002 | 2026-06-21 | P-002 | O-P002-004（MCP stub） | closed — [mcp/glossary-knowledge/](../../mcp/glossary-knowledge/) |
 | D-003 | 2026-06-21 | （ops） | Terraform（AWS 第一） | planned — [docs/IAC.md](../../docs/IAC.md) |
+| D-004 | 2026-06-29 | P-009（repo 間追従による連鎖破綻リスク） | O-P009-001（artifact boundary / Semver 契約） | in progress — package cutover |
+| D-005 | 2026-06-29 | P-009-B（Remote service 検討） | Contract-first canon（Domain/Surface/SPI 先行固定） | in progress — [meta/contracts/](../contracts/README.md) |
 
 ---
 
@@ -120,3 +122,55 @@ Living document
 **実装:** planned — [docs/IAC.md](../../docs/IAC.md) · [infra/terraform/README.md](../../infra/terraform/README.md)
 
 **影響:** `infra/terraform/` · ROADMAP-AND-COSTS · IMPLEMENTATION-COMPARISON · Phase 0.5 TODO
+
+---
+
+## D-004 {#d-004}
+
+**日付:** 2026-06-29
+
+**Problem:** P-009（techdev-cursor ↔ term-prep-platform の sibling 追従・双方向 handoff により、runtime / docs / CI の連鎖破綻が発生しうる）
+
+**採択:** O-P009-001 — **Artifact boundary**（pip package + Semver 契約）を採用。consumer は sibling path ではなく version pin で接続。
+
+**棄却:**
+
+- O-P009-002 — Remote MCP / 常時サービス化（SPOF と運用負債が先行）
+- O-P009-003 — 完全独立（consumer 内製または vendoring、重複実装ドリフト増大）
+
+**理由:**
+
+- sibling パス依存（`../term-prep-platform`）を廃し、再現性を version pin に移せる
+- Phase 0.5 の実装資産（extractor / sync / schema）を捨てずに脱耦できる
+- multi-consumer（techdev-cursor / dopagaki）へ拡張しやすい
+- Remote service 案よりも初期コストと可用性リスクを抑えられる
+
+**実装:** in progress — `term-prep` package entry points（extract/sync/mcp）と consumer cutover guide。
+
+**影響:** `pyproject.toml`, package entrypoint, `meta/consumer-handoff/` migration guide, `projects/techdev-cursor/` mirror 廃止
+
+---
+
+## D-005 {#d-005}
+
+**日付:** 2026-06-29
+
+**Problem:** P-009-B（将来の enterprise 運用で Remote service / Remote MCP を採択する前に、
+I/F 仕様が未固定だと connector 実装コストと consumer 追従コストが増える）
+
+**採択:** O-P009-002 — Contract-first 方式で canonical spec を先に固定する（実装前に Domain/Surface/SPI を定義）。
+
+**棄却:**
+
+- サービス実装先行（仕様は実装後追い）
+- transport ごとに独立 payload を許容（HTTP/SSE/MCP/CLI で別契約）
+
+**理由:**
+
+- enterprise では API 契約と変更管理がコードより長寿命
+- connector 実装を SPI + conformance test で共通化できる
+- consumer 側 CI で互換性を早期検知できる
+
+**実装:** in progress — `meta/contracts/`（domain, version policy, OpenAPI, SSE schema, MCP/CLI/SPI contract）。
+
+**影響:** `meta/contracts/` を Plan B 実装の唯一の契約正本とする。

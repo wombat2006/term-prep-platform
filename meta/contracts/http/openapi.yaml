@@ -1,0 +1,367 @@
+openapi: 3.1.0
+info:
+  title: term-prep-platform Service Contract
+  version: 1.0.0-draft
+  description: Contract-first API skeleton for Plan B remote service.
+servers:
+  - url: https://api.term-prep.example.com
+security: []
+paths:
+  /v1/extract/jobs:
+    post:
+      summary: Start extract job
+      operationId: startExtractJob
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ExtractJobRequest'
+      responses:
+        '202':
+          description: Accepted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AsyncJobStatus'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+  /v1/sync/jobs:
+    post:
+      summary: Start sync job
+      operationId: startSyncJob
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SyncJobRequest'
+      responses:
+        '202':
+          description: Accepted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AsyncJobStatus'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+  /v1/jobs/{jobId}:
+    get:
+      summary: Get async job status
+      operationId: getJobStatus
+      security: []
+      parameters:
+        - name: jobId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Job status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AsyncJobStatus'
+        '404':
+          description: Job not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+  /v1/jobs/{jobId}/events:
+    get:
+      summary: Stream async job events (SSE)
+      operationId: streamJobEvents
+      security: []
+      parameters:
+        - name: jobId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: >
+            Server-sent events stream. Each event line is a JSON-encoded
+            SSEEventEnvelope (see meta/contracts/sse/event-envelope.schema.json).
+          content:
+            text/event-stream:
+              schema:
+                type: string
+        '404':
+          description: Job not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+  /v1/knowledge/classify:
+    post:
+      summary: Classify one term candidate
+      operationId: classifyTermCandidate
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - candidate
+              properties:
+                candidate:
+                  $ref: '#/components/schemas/TermCandidate'
+      responses:
+        '200':
+          description: Classification result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/KnowledgeClassification'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: >
+        Reserved for Plan B enterprise authentication. Not enforced in the
+        current draft. When enterprise auth is activated, endpoints will
+        require `security: [{BearerAuth: []}]` — adding security is a
+        non-breaking change under this scheme because `security: []` already
+        declares optional auth.
+  schemas:
+    GlossaryConfig:
+      description: >
+        Inline glossary config passed to remote service calls. Mirrors the
+        consumer-side meta/glossary-config.json schema (validated against
+        meta/schemas/glossary-config.schema.json). The remote service does
+        not read the consumer filesystem; config must be sent inline.
+      type: object
+      required:
+        - version
+        - project_root
+        - corpus
+        - scoring
+        - output
+      properties:
+        version:
+          type: string
+          description: Semver string (e.g. "1.0.0")
+        project_root:
+          type: string
+          description: >
+            Consumer project root, used as base for corpus file resolution
+            within the service sandbox. Relative paths are resolved from
+            this value.
+        corpus:
+          type: object
+          required:
+            - files
+          properties:
+            files:
+              type: array
+              items:
+                type: string
+              description: Glob patterns or relative paths to corpus documents.
+        scoring:
+          type: object
+          description: adopt/hold thresholds and weights.
+          additionalProperties: true
+        output:
+          type: object
+          description: adopt / hold / registry / reject output paths.
+          additionalProperties: true
+        source:
+          type: object
+          description: Optional — connector source config (Phase 0.5+).
+          additionalProperties: true
+        filter:
+          type: object
+          description: Optional — extraction filter settings.
+          additionalProperties: true
+        knowledge_filter:
+          type: object
+          description: Optional — MCP knowledge filter settings.
+          additionalProperties: true
+    ExtractJobRequest:
+      type: object
+      required:
+        - config
+      properties:
+        config:
+          $ref: '#/components/schemas/GlossaryConfig'
+        mode:
+          type: string
+          enum: [check, run]
+          default: run
+          description: >
+            check — validate config and morphology only, no output written.
+            run — full extraction.
+    SyncJobRequest:
+      type: object
+      required:
+        - config
+      properties:
+        config:
+          $ref: '#/components/schemas/GlossaryConfig'
+        connector_id:
+          type: string
+          default: googledrive
+          description: Connector adapter to use for mirror sync.
+        mode:
+          type: string
+          enum: [check, mirror]
+          default: mirror
+          description: >
+            check — validate config and credentials only.
+            mirror — sync remote items to local corpus staging.
+    AsyncJobStatus:
+      type: object
+      required:
+        - job_id
+        - job_type
+        - status
+      properties:
+        job_id:
+          type: string
+          description: Stable opaque job identifier generated by platform.
+        job_type:
+          type: string
+          enum: [extract, sync, classify]
+        status:
+          type: string
+          enum: [accepted, running, succeeded, failed, cancelled]
+        progress:
+          type: object
+          properties:
+            current:
+              type: integer
+              minimum: 0
+            total:
+              type: integer
+              minimum: 0
+            unit:
+              type: string
+        result_ref:
+          type: string
+          nullable: true
+          description: >
+            URL path to the job result resource when status=succeeded.
+            For sync jobs this resolves to a SyncJob detail.
+            For extract jobs this resolves to the TermCandidate list.
+        error:
+          $ref: '#/components/schemas/ErrorEnvelope'
+          nullable: true
+    TermCandidate:
+      type: object
+      required:
+        - candidate_id
+        - term
+        - score
+        - source
+      properties:
+        candidate_id:
+          type: string
+          description: >
+            Opaque stable ID generated by the platform during extract.
+            Format: tc_<ULID> or tc_<uuid4>. Consumers must not generate
+            or mutate this value.
+        term:
+          type: string
+        normalized_term:
+          type: string
+        language:
+          type: string
+        domain_hint:
+          type: string
+        score:
+          type: number
+        source:
+          type: object
+          required:
+            - document_path
+          properties:
+            document_path:
+              type: string
+            line_start:
+              type: integer
+            line_end:
+              type: integer
+        features:
+          type: object
+          additionalProperties: true
+    KnowledgeClassification:
+      type: object
+      required:
+        - candidate_id
+        - label
+        - confidence
+        - provider_id
+      properties:
+        candidate_id:
+          type: string
+        label:
+          type: string
+          enum: [canonical, domain, general, unknown]
+        confidence:
+          type: number
+        provider_id:
+          type: string
+        reason:
+          type: string
+        classified_at:
+          type: string
+          format: date-time
+    ErrorEnvelope:
+      type: object
+      required:
+        - error
+        - trace_id
+        - timestamp
+      properties:
+        error:
+          type: object
+          required:
+            - code
+            - message
+            - retryable
+          properties:
+            code:
+              type: string
+              description: >
+                Stable machine-readable code. Families:
+                CONFIG_* | AUTH_* | CONNECTOR_* | CONTRACT_* | INTERNAL_*
+            message:
+              type: string
+              description: Human-readable description. May evolve across patch versions.
+            retryable:
+              type: boolean
+              description: >
+                If true, the operation may succeed on retry (see versioning-policy.md
+                for recommended retry strategy). If false, retrying is not useful.
+            details:
+              type: object
+              additionalProperties: true
+        trace_id:
+          type: string
+          description: Required for enterprise support and audit tracing.
+        timestamp:
+          type: string
+          format: date-time

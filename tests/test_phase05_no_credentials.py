@@ -48,15 +48,15 @@ class CorpusGlobTests(unittest.TestCase):
 
 
 class GlossaryConfigSchemaTests(unittest.TestCase):
-    def test_techdev_cursor_config_valid_with_source_disabled(self) -> None:
-        config_path = _REPO_ROOT / "projects" / "techdev-cursor" / "glossary-config.json"
+    def test_template_config_valid_with_source_disabled(self) -> None:
+        config_path = _REPO_ROOT / "projects" / "_template" / "glossary-config.json"
         config = load_config(config_path)
         self.assertFalse(config.get("source", {}).get("enabled"))
 
 
 class SyncCorpusCheckTests(unittest.TestCase):
     def test_check_passes_when_source_disabled(self) -> None:
-        config = _REPO_ROOT / "projects" / "techdev-cursor" / "glossary-config.json"
+        config = _REPO_ROOT / "projects" / "_template" / "glossary-config.json"
         code = sync_corpus_main(["--config", str(config), "--check"])
         self.assertEqual(code, 0)
 

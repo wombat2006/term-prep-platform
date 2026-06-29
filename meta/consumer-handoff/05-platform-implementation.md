@@ -1,8 +1,9 @@
 # Platform implementation reference (Phase 0 · 0.5)
 
-**Read as:** Understand **what term-prep-platform has built** before opening a consumer PR.  
+**Read as:** Step 3 of [consumer-handoff index](./README.md) · [top entry: ../CONSUMER_HANDOFF.md](../CONSUMER_HANDOFF.md)  
+**Purpose:** Platform が何を実装したかを理解してから consumer PR を開く。  
 **Audience:** techdev-cursor maintainers (read-only on this repo).  
-**Last updated:** 2026-06-21
+**Last updated:** 2026-06-29
 
 ---
 
@@ -13,7 +14,10 @@
 | **Platform** | term-prep-platform | Wall-Bounce, Genspark, aidrive, consumer `meta/glossary-*` edits |
 | **Consumer** | techdev-cursor | `glossary_extractor` body, Drive mirror TS, platform MCP source |
 
-Consumer **invokes** platform via sibling clone + npm wrappers. Platform **never** commits to techdev-cursor.
+Consumer invokes platform via **versioned package entrypoints**. Platform never commits to techdev-cursor.
+
+Plan B pre-implementation contracts (remote service draft) are tracked separately in
+[meta/contracts/](../contracts/README.md) and do not replace current package invoke flow yet.
 
 ---
 
@@ -27,7 +31,7 @@ techdev-cursor/meta/glossary-config.json
        ↓
 npm run glossary:extract
        ↓
-../term-prep-platform/scripts/glossary_extractor.py
+term-prep-extract --config meta/glossary-config.json
        ↓
 meta/glossary-adopt.json · meta/glossary-hold.json
 ```
@@ -69,8 +73,6 @@ term-prep-platform/
 ├── meta/schemas/
 │   └── glossary-config.schema.json  # includes optional `source` block
 ├── mcp/glossary-knowledge/          # stub MCP (NullProvider)
-├── projects/techdev-cursor/
-│   └── glossary-config.json         # mirror of consumer config (dev reference)
 ├── tests/test_phase05_no_credentials.py
 └── meta/consumer-handoff/           # ← you are here (consumer read pack)
 ```
@@ -107,10 +109,6 @@ term-prep-platform/
 
 Schema source: [glossary-config.schema.json](../schemas/glossary-config.schema.json)
 
-Reference mirror (matches intended consumer shape; `project_root` differs):
-
-[projects/techdev-cursor/glossary-config.json](../../projects/techdev-cursor/glossary-config.json)
-
 | Field | Notes |
 |-------|-------|
 | `source.enabled` | `false` = interim in-repo `corpus.files` (current) |
@@ -126,11 +124,11 @@ When enabling Drive mirror, consumer **must** switch `corpus.files` to globs und
 
 | Check | Where | Credentials |
 |-------|-------|-------------|
-| `bash scripts/run_phase05_checks.sh` | platform | No |
+| `bash scripts/run_phase05_checks.sh` | platform package env | No |
 | `npm run test` in `connectors/googledrive` | platform | No |
-| `python scripts/sync_corpus.py --check --config <consumer-config>` | platform | No |
-| `npm run glossary:extract:check` | consumer | No |
-| `sync_corpus.py` (full sync) | platform | **Yes** — deferred |
+| `term-prep-sync --check --config <consumer-config>` | consumer runtime | No |
+| `term-prep-extract --check --config <consumer-config>` | consumer runtime | No |
+| `term-prep-sync --config <consumer-config>` | consumer runtime | **Yes** — deferred |
 | sync → extract E2E | consumer + platform | **Yes** — deferred |
 
 ---

@@ -1,104 +1,76 @@
-# Consumer handoff — platform progress & obligations
+# Consumer handoff index — package contract migration
 
-**Audience:** Agents and maintainers working in **techdev-cursor** (and other consumers)  
-**Canonical location:** term-prep-platform only — consumer adds **pointers** here; do not mirror this tree into consumer unless the user requests it  
-**Status:** Active (2026-06-21) — living status pack, not an ADR
-
----
-
-## Purpose
-
-techdev-cursor is the **consumer**; term-prep-platform is the **platform** (glossary extract, connectors, MCP).  
-Consumer agents need a **read-only** view of platform progress, schema/CLI contract, and **pending consumer-side actions** — without editing this repo.
-
-This directory is the **single entry** for that view. It complements consumer-owned [platform-integration](https://github.com/wombat2006/techdev-cursor/blob/master/meta/platform-integration/README.md) (boundary **into** platform work).
-
-| Direction | Canonical pack | Who edits |
-|-----------|----------------|-----------|
-| Platform → consumer (status, schema, actions) | **This tree** (`meta/consumer-handoff/`) | term-prep-platform |
-| Consumer → platform (boundary, Genspark, scope) | techdev-cursor `meta/platform-integration/` | techdev-cursor |
-
-**Cross-repo policy:** Consumer agents **read** term-prep-platform (sibling clone). Platform agents **read** techdev-cursor. **Neither repo's agents edit the other repo** — consumer changes go through a **consumer PR** spec'd in [04-consumer-pr-guide-techdev-cursor.md](./04-consumer-pr-guide-techdev-cursor.md).
+**Audience:** techdev-cursor / dopagaki maintainers  
+**Start here:** [../CONSUMER_HANDOFF.md](../CONSUMER_HANDOFF.md) — top entry point with read order  
+**Status:** Active migration guide (cross-repo A+C bot deprecated 2026-06-29)
 
 ---
 
-## Resolve term-prep-platform path (consumer side)
+## Migration summary
 
-Use the first path that exists on your machine:
+sibling path coupling (`../term-prep-platform`) と cross-repo issue bot を廃止し、
+**versioned package contract** に移行しています。
 
-| Priority | Path | When |
-|----------|------|------|
-| 1 | `$TERM_PREP_PLATFORM_ROOT` | Env override (recommended in CI) |
-| 2 | `../term-prep-platform` | Default sibling layout next to techdev-cursor |
-| 3 | Clone | `https://github.com/wombat2006/term-prep-platform` |
+| Surface | New contract |
+|---|---|
+| Extract CLI | `term-prep-extract` |
+| Sync CLI | `term-prep-sync` |
+| MCP server | `term-prep-glossary-knowledge-mcp` |
+| Schema | `meta/schemas/glossary-config.schema.json` in package release |
+| Versioning | Semver（MAJOR = contract break） |
 
-All paths below are **relative to term-prep-platform repo root**.
-
----
-
-## Mandatory read order (consumer work touching platform)
-
-Read **in order** before changing `meta/glossary-config.json`, npm glossary scripts, MCP registration, or corpus paths.
-
-| Step | File | Covers |
-|------|------|--------|
-| **0** | This file | Index, paths, policy |
-| **1** | [05-platform-implementation.md](./05-platform-implementation.md) | **What platform built** — artifacts, flows, tests |
-| **2** | [01-platform-status.md](./01-platform-status.md) | Phase progress · shipped vs planned |
-| **3** | [02-schema-and-cli.md](./02-schema-and-cli.md) | Config schema, CLI/MCP surface |
-| **4** | [04-consumer-pr-guide-techdev-cursor.md](./04-consumer-pr-guide-techdev-cursor.md) | **Consumer PR spec** (copy-paste; platform does not open PR) |
-| **5** | [03-consumer-actions.md](./03-consumer-actions.md) | Obligations checklist |
-| **6** | [CHANGELOG.md](./CHANGELOG.md) | Dated platform changes |
-| **7** | [06-cross-repo-workflow.md](./06-cross-repo-workflow.md) | **A+C bot** Issue / PR coordination |
-
-**Per-consumer summary:** [consumers/techdev-cursor.md](./consumers/techdev-cursor.md)
+Decision: [D-004](../glossary-pipeline/DECISIONS.md#d-004)
 
 ---
 
-## Task-specific shortcuts
+## Numbered read order（このフォルダの各ファイル）
 
-| Your task | Minimum read set |
-|-----------|------------------|
-| Run / fix `glossary:extract` | 01 (Phase 0) + 02 |
-| Enable Google Drive mirror (Phase 0.5) | 05 + 01 + 02 + **04** + [consumers/techdev-cursor.md](./consumers/techdev-cursor.md) |
-| Open consumer PR for handoff wiring | **04** + install [consumer-templates](../../scripts/cross_repo/consumer-templates/) |
-| Cross-repo bot / Issue flow | **06** + [scripts/cross_repo](../../scripts/cross_repo/README.md) |
-| MCP `glossary-knowledge` | 02 § MCP |
-| Check if platform blocked you | 03 + CHANGELOG |
-| Genspark / aidrive scope | techdev-cursor `meta/platform-integration/02-genspark-aidrive-boundary.md` (not duplicated here) |
-
----
-
-## When to stop and notify the user
-
-1. Platform change is required but not listed as **done** in 01 — escalate; do not edit term-prep-platform from consumer workspace.
-2. Schema or output shape in 02 does not match what extract produced — report mismatch with config path and platform commit/date.
-3. Action in 03 is blocked (missing credentials, path, MCP) — user must unblock; agent does not commit cross-repo.
+| Step | File | 何が分かるか |
+|---|---|---|
+| 0 | **[../CONSUMER_HANDOFF.md](../CONSUMER_HANDOFF.md)** | 全体 TOP・read order・役割分担 |
+| 1 | [01-platform-status.md](./01-platform-status.md) | 各 Phase の実装状況と consumer への影響 |
+| 2 | [05-platform-implementation.md](./05-platform-implementation.md) | Platform が何を実装したかの詳細 |
+| 3 | [02-schema-and-cli.md](./02-schema-and-cli.md) | 設定スキーマ・CLI・環境変数 |
+| 4 | [04-consumer-pr-guide-techdev-cursor.md](./04-consumer-pr-guide-techdev-cursor.md) | consumer 側 PR テンプレート |
+| 5 | [03-consumer-actions.md](./03-consumer-actions.md) | 自分でやること一覧 |
+| 6 | [CHANGELOG.md](./CHANGELOG.md) | consumer 向け変更履歴 |
+| 7 | [../contracts/README.md](../contracts/README.md) | Plan B service 契約 canon（将来参照用） |
 
 ---
 
-## Platform maintainer sync checklist
+## Plan B contract canon（将来参照）
 
-When platform work affects consumers, update **term-prep-platform in one commit:**
+Remote service（Plan B）実装前に契約を先に確定しています。
+consumer の即時対応は不要ですが、将来の remote 採用時に参照します。
 
-- [ ] [01-platform-status.md](./01-platform-status.md) — phase checkboxes / status line
-- [ ] [02-schema-and-cli.md](./02-schema-and-cli.md) — if schema or CLI contract changed
-- [ ] [03-consumer-actions.md](./03-consumer-actions.md) — new or completed consumer obligations
-- [ ] [CHANGELOG.md](./CHANGELOG.md) — dated entry
-- [ ] [consumers/techdev-cursor.md](./consumers/techdev-cursor.md) — if techdev-cursor-specific
-- [ ] [meta/TODO.md](../TODO.md) — execution checklist (platform-internal)
-- [ ] [05-platform-implementation.md](./05-platform-implementation.md) — if artifacts or flows changed
-- [ ] [04-consumer-pr-guide-techdev-cursor.md](./04-consumer-pr-guide-techdev-cursor.md) — if consumer PR spec changes
-- [ ] Notify user to open **consumer PR** using 04 (platform does not edit techdev-cursor)
+- [../contracts/README.md](../contracts/README.md)
+- [../contracts/http/openapi.yaml](../contracts/http/openapi.yaml)
+- [../contracts/sse/event-envelope.schema.json](../contracts/sse/event-envelope.schema.json)
+- [../contracts/mcp-tool-contract.md](../contracts/mcp-tool-contract.md)
+- [../contracts/connector-spi.md](../contracts/connector-spi.md)
+- [../contracts/llm-provider-policy.md](../contracts/llm-provider-policy.md)
 
 ---
 
-## Related (platform)
+## Deprecated
 
-| Topic | Path |
-|-------|------|
-| Integration detail (platform view) | [docs/integrations/techdev-cursor.md](../../docs/integrations/techdev-cursor.md) |
-| Config schema | [meta/schemas/glossary-config.schema.json](../schemas/glossary-config.schema.json) |
-| Consumer config mirror | [projects/techdev-cursor/glossary-config.json](../../projects/techdev-cursor/glossary-config.json) |
-| Phase 0.5 Drive connector | [connectors/googledrive/README.md](../../connectors/googledrive/README.md) |
-| Execution TODO | [meta/TODO.md](../TODO.md) |
+- [06-cross-repo-workflow.md](./06-cross-repo-workflow.md) — A+C issue bot（廃止済み）
+- `scripts/cross_repo/*` helpers（廃止済み）
+- `projects/techdev-cursor/*` mirror config in this repo（廃止済み）
+
+---
+
+## Platform maintainer checklist
+
+- [ ] [CHANGELOG.md](./CHANGELOG.md) に consumer-facing 変更を記録
+- [ ] [02-schema-and-cli.md](./02-schema-and-cli.md) を package scripts と同期
+- [ ] [04-consumer-pr-guide-techdev-cursor.md](./04-consumer-pr-guide-techdev-cursor.md) を最新状態に保つ
+- [ ] schema / CLI 変更時は package Semver 更新 + publish
+
+---
+
+## Related
+
+- [docs/integrations/techdev-cursor.md](../../docs/integrations/techdev-cursor.md)
+- [meta/schemas/glossary-config.schema.json](../schemas/glossary-config.schema.json)
+- [connectors/googledrive/README.md](../../connectors/googledrive/README.md)

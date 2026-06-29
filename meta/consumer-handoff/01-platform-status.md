@@ -1,7 +1,7 @@
 # Platform status snapshot
 
 **Read as:** Step 1 of [consumer-handoff index](./README.md)  
-**Last updated:** 2026-06-21  
+**Last updated:** 2026-06-29  
 **Detail checklist:** [meta/TODO.md](../TODO.md)
 
 ---
@@ -12,6 +12,8 @@
 |-------|-------|--------|-----------------|
 | **0** | adopt/hold split, schema, extractor | **Done** | Use `npm run glossary:extract`; outputs under `meta/glossary-*.json` |
 | **0.5** | Source connector — Google Drive mirror | **In progress** | Mirror code on platform; consumer enables `source` + corpus globs when ready |
+| **Decoupling** | Artifact boundary / package contract | **In progress** | switch from sibling path to package pin |
+| **Plan B prep** | Contract-first canon (Domain/Surface/SPI) | **In progress** | no immediate migration; track `meta/contracts/` before remote adoption |
 | **1** | Core package split (`scripts/glossary/`) | Not started | None yet |
 | **2 / 2.5** | seed-first, real `glossary-knowledge` provider | Stub only | MCP returns `unknown` for all terms |
 | **3–4** | GLOSSARY diff, Python RAG subpackage | Not started | None yet |
@@ -50,7 +52,6 @@
 |------|-------|
 | Live Drive sync smoke | Requires OAuth env — **scheduled later** |
 | S3 adapter + Terraform modules | `0.5-2` in [TODO.md](../TODO.md) |
-| Consumer re-export of TS connector | User applies on techdev-cursor |
 | Consumer `source.enabled: true` | User applies when folder_id + credentials ready |
 
 ### Target flow (when consumer enables source)
@@ -61,6 +62,19 @@ glossary:extract  →  meta/glossary-adopt.json · hold.json
 ```
 
 ---
+
+## Decoupling migration (D-004)
+
+- **deprecated:** cross-repo A+C issue bot (`06-cross-repo-workflow.md` legacy)
+- **new contract:** package entrypoints + Semver pin
+- **consumer cutover guide:** [04-consumer-pr-guide-techdev-cursor.md](./04-consumer-pr-guide-techdev-cursor.md)
+
+## Plan B prep (D-005, draft)
+
+- **canonical contract directory:** [../contracts/README.md](../contracts/README.md)
+- **domain model:** `TermCandidate`, `KnowledgeClassification`, `SyncJob`, `AsyncJobStatus`, `ErrorEnvelope`
+- **surface drafts:** HTTP OpenAPI, SSE event envelope schema, MCP tool contract, CLI contract
+- **connector enablement:** SPI contract + conformance test baseline
 
 ## Phase 4.5 — RAG Vector (planned)
 

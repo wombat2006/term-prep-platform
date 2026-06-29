@@ -9,6 +9,7 @@
 __pycache__/
 *.py[cod]
 *.log
+*.egg-info/
 build/
 connectors/googledrive/node_modules/
 connectors/googledrive/dist/

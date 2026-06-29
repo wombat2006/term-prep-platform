@@ -7,6 +7,54 @@ Format: `YYYY-MM-DD` — summary — consumer action if any
 
 ---
 
+## 2026-06-29 — LLM provider policy added (contracts)
+
+**Changed**
+
+- Added `meta/contracts/llm-provider-policy.md`: SDK interface design, error normalization table,
+  and `providers.json` format for Anthropic / Google Gen AI / Ollama
+- `mcp-tool-contract.md`: clarified that `provider_id` is informational; added link to new policy
+- `02-schema-and-cli.md`: added one-liner explaining provider abstraction when `knowledge_filter.enabled: true`
+
+**Consumer action**
+
+None. Provider chain is platform-controlled. No consumer config changes.
+
+---
+
+## 2026-06-29 — Decoupling pivot: package contract (D-004)
+
+**Changed**
+
+- Adopted artifact boundary (`term-prep-platform` package + Semver pin)
+- Deprecated A+C cross-repo issue bot flow
+- Rewrote consumer PR guide for package cutover
+- Added consumer CI template: `templates/consumer-contract-ci.yml`
+
+**Consumer action**
+
+- Open cutover PR based on [04-consumer-pr-guide-techdev-cursor.md](./04-consumer-pr-guide-techdev-cursor.md)
+- Replace sibling path launch with package entrypoints
+- Add contract CI check (`term-prep-contract-check`)
+
+---
+
+## 2026-06-29 — Plan B contract-first canon (D-005, draft)
+
+**Added**
+
+- `meta/contracts/` as canonical spec directory for future remote service surfaces
+- Domain contract definitions: `TermCandidate`, `KnowledgeClassification`, `SyncJob`, `AsyncJobStatus`, `ErrorEnvelope`
+- Surface contract drafts: HTTP OpenAPI, SSE event envelope schema, MCP tool contract, CLI contract
+- Connector SPI contract for lower-cost adapter onboarding
+
+**Consumer action**
+
+- No immediate migration required; keep using package CLI contract (`1.x`)
+- Track `meta/contracts/` before adopting remote service integration
+
+---
+
 ## 2026-06-21 — A+C cross-repo workflow (bot + consumer scripts)
 
 **Added**

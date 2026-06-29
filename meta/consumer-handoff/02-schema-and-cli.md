@@ -7,14 +7,12 @@
 
 ## Config file
 
-| Role | Path (techdev-cursor) | Path (platform mirror) |
-|------|----------------------|-------------------------|
-| **Runtime** | `meta/glossary-config.json` | — |
-| Reference / CI | — | `projects/techdev-cursor/glossary-config.json` |
+| Role | Path |
+|------|------|
+| **Runtime** | consumer `meta/glossary-config.json` |
+| **Schema source** | package release `meta/schemas/glossary-config.schema.json` |
 
-`project_root` in consumer config points at consumer repo root. Platform mirror uses `../../../techdev-cursor` for local dev.
-
-**Rule:** Schema changes land on platform first; consumer `meta/glossary-config.json` updated **same timing** (user / consumer PR).
+**Rule:** Schema and CLI contract are versioned by package Semver.
 
 ---
 
@@ -60,30 +58,50 @@ Present in schema; safe with `enabled: false` (default in platform mirror).
 
 ---
 
-## CLI commands (consumer npm → platform)
+## Package entrypoints (consumer invokes)
 
-| Consumer npm | Platform command | Purpose |
-|--------------|------------------|---------|
-| `glossary:extract:check` | `glossary_extractor.py --check` | Morphology + schema |
-| `glossary:extract` | `glossary_extractor.py` (no dry-run) | Full extract |
-| `glossary:mcp-smoke` | MCP stub test | `glossary-knowledge` wiring |
+| Command | Purpose |
+|--------------|---------|
+| `term-prep-extract --check --config <config>` | Morphology + schema |
+| `term-prep-extract --config <config>` | Full extract |
+| `term-prep-sync --check --config <config>` | Connector readiness / config check |
+| `term-prep-sync --config <config>` | Sync mirror |
+| `term-prep-contract-check --config <config> --expect-major 1` | Contract guard in CI |
 
-**Phase 0.5 sync (not yet wired in consumer npm by default):**
+These commands are the current production invoke surface (D-004 package contract).
+
+---
+
+## Upcoming Plan B service surfaces (contract-first draft)
+
+Before remote service implementation, canonical interface specs are fixed at:
+
+- [../contracts/http/openapi.yaml](../contracts/http/openapi.yaml)
+- [../contracts/sse/event-envelope.schema.json](../contracts/sse/event-envelope.schema.json)
+- [../contracts/mcp-tool-contract.md](../contracts/mcp-tool-contract.md)
+- [../contracts/cli-contract.md](../contracts/cli-contract.md)
+
+Consumer impact policy:
+
+- package CLI remains supported in major version `1.x`
+- remote HTTP/SSE/MCP surfaces are introduced additively
+- any incompatible change is major-version gated and announced in changelog
+
+### Consumer npm mapping (example)
 
 ```bash
-python scripts/sync_corpus.py --config meta/glossary-config.json
-python scripts/sync_corpus.py --check --config meta/glossary-config.json
+term-prep-extract --check --config meta/glossary-config.json
+term-prep-extract --config meta/glossary-config.json
+term-prep-sync --check --config meta/glossary-config.json
 ```
-
-Run from platform repo with `TERM_PREP_PLATFORM_ROOT` or sibling path; `--config` may be absolute path to consumer `meta/glossary-config.json`.
 
 ---
 
 ## Environment variables
 
-### Glossary extract (platform venv)
+### Extract / sync runtime
 
-Uses consumer `project_root` for corpus paths. Platform `.venv` required (`requirements-dev.txt`).
+Install package in consumer runtime environment. No sibling repo path required.
 
 ### Google Drive mirror (Phase 0.5)
 
@@ -117,16 +135,17 @@ Uses consumer `project_root` for corpus paths. Platform `.venv` required (`requi
 
 ```json
 "glossary-knowledge": {
-  "command": "/path/to/term-prep-platform/.venv/bin/python",
-  "args": ["-m", "glossary_knowledge_mcp"],
-  "cwd": "/path/to/term-prep-platform/mcp/glossary-knowledge",
-  "env": {
-    "PYTHONPATH": "/path/to/term-prep-platform/mcp/glossary-knowledge"
-  }
+  "command": "term-prep-glossary-knowledge-mcp"
 }
 ```
 
 **Current behavior:** `knowledge_filter.enabled: false` → extractor skips MCP; smoke test classifies all terms as `unknown`.
+
+**When `enabled: true`:** The platform routes each term through the configured LLM provider chain
+(Anthropic / Google / Ollama / fallback). Consumer code does not change when the platform
+adds or switches providers. Only `label` and `candidate_id` matter to consumer logic.
+
+**Provider abstraction policy:** [meta/contracts/llm-provider-policy.md](../../meta/contracts/llm-provider-policy.md)
 
 **Do not modify** `techsapo-providers` — separate stdio server.
 
@@ -134,17 +153,12 @@ Uses consumer `project_root` for corpus paths. Platform `.venv` required (`requi
 
 ## Verification (no Drive credentials)
 
-From platform root:
+From any environment with package installed:
 
 ```bash
-bash scripts/run_phase05_checks.sh
-python scripts/glossary_extractor.py --check --config projects/techdev-cursor/glossary-config.json
-```
-
-From consumer (with sibling platform):
-
-```bash
-npm run glossary:extract:check
+term-prep-extract --check --config meta/glossary-config.json
+term-prep-sync --check --config meta/glossary-config.json
+term-prep-contract-check --config meta/glossary-config.json --expect-major 1
 ```
 
 ---
@@ -154,3 +168,4 @@ npm run glossary:extract:check
 - [meta/schemas/README.md](../schemas/README.md)
 - [connectors/googledrive/README.md](../../connectors/googledrive/README.md) § Testing
 - [docs/MCP-CONTRACTS.md](../../docs/MCP-CONTRACTS.md)
+- [templates/consumer-contract-ci.yml](./templates/consumer-contract-ci.yml)

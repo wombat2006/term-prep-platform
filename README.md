@@ -27,7 +27,7 @@
 
 設計と骨格は揃っていますが、MCP の多くはこれから実装する段階です。いま動いているのは Phase 0 の `glossary_extractor` と設定スキーマ検証、`glossary-knowledge` MCP の stub です。
 
-アーキテクチャ図: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) · ロードマップ: [meta/TO-BE-PLATFORM.md](meta/TO-BE-PLATFORM.md) · **方向性・コスト見積もり:** [docs/ROADMAP-AND-COSTS.md](docs/ROADMAP-AND-COSTS.md) · **実装比較:** [docs/IMPLEMENTATION-COMPARISON.md](docs/IMPLEMENTATION-COMPARISON.md) · 実行 TODO: [meta/TODO.md](meta/TODO.md) · **consumer 向け進捗:** [meta/consumer-handoff/README.md](meta/consumer-handoff/README.md)
+アーキテクチャ図: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) · ロードマップ: [meta/TO-BE-PLATFORM.md](meta/TO-BE-PLATFORM.md) · **方向性・コスト見積もり:** [docs/ROADMAP-AND-COSTS.md](docs/ROADMAP-AND-COSTS.md) · **実装比較:** [docs/IMPLEMENTATION-COMPARISON.md](docs/IMPLEMENTATION-COMPARISON.md) · 実行 TODO: [meta/TODO.md](meta/TODO.md) · **consumer 向け起点:** [meta/CONSUMER_HANDOFF.md](meta/CONSUMER_HANDOFF.md)
 
 ---
 
@@ -38,7 +38,7 @@
 | 例 | term-prep-platform | [techdev-cursor](https://github.com/wombat2006/techdev-cursor)、[dopagaki-transition](https://github.com/wombat2006/dopagaki-transition) |
 | 持つもの | MCP · CLI · schema · **connectors（提案）** | corpus · 正典 · query expander |
 | 接続 | `.cursor/mcp.json` · npm connector scripts | `glossary-config.json` |
-| **進捗の読み取り** | [meta/consumer-handoff/](meta/consumer-handoff/README.md) を consumer が sibling から参照 | [platform-integration](https://github.com/wombat2006/techdev-cursor/blob/master/meta/platform-integration/README.md) を platform が参照 |
+| **進捗の読み取り** | [meta/CONSUMER_HANDOFF.md](meta/CONSUMER_HANDOFF.md) が consumer の起点 | [platform-integration](https://github.com/wombat2006/techdev-cursor/blob/master/meta/platform-integration/README.md) を platform が参照 |
 
 本リポジトリが出力する adopt / hold JSON や（将来の）term registry を、各利用側が RAG・辞書・クエリ拡張に接続します。
 
@@ -165,7 +165,7 @@ EventBridge（prep succeeded / failed / warning）
 
 | リポジトリ | 用途 | 設定 |
 |---|---|---|
-| [techdev-cursor](https://github.com/wombat2006/techdev-cursor) | Google Drive → RAG 前処理 | [projects/techdev-cursor/](projects/techdev-cursor/) |
+| [techdev-cursor](https://github.com/wombat2006/techdev-cursor) | Google Drive → RAG 前処理 | [meta/CONSUMER_HANDOFF.md](meta/CONSUMER_HANDOFF.md) |
 | [dopagaki-transition](https://github.com/wombat2006/dopagaki-transition) | 研究原稿の用語集 | [projects/dopagaki-transition/](projects/dopagaki-transition/) |
 
 連携手順: [docs/integrations/](docs/integrations/)
@@ -181,9 +181,10 @@ python3.11 -m venv .venv
 source .venv/bin/activate
 python -m pip install -r requirements-dev.txt
 python -m pip install -r mcp/glossary-knowledge/requirements.txt
+python -m pip install -e .
 
 # 形態素エンジンと設定ファイルの確認
-python scripts/glossary_extractor.py --check \
+term-prep-extract --check \
   --config projects/dopagaki-transition/glossary-config.json
 
 # MCP stub の動作確認
@@ -209,13 +210,46 @@ print('OK:', r)
 
 ---
 
+## Package contract (D-004)
+
+Consumer は sibling path ではなく package の entrypoint を呼び出す。
+
+```bash
+term-prep-extract --check --config meta/glossary-config.json
+term-prep-sync --check --config meta/glossary-config.json
+term-prep-glossary-knowledge-mcp
+term-prep-contract-check --config meta/glossary-config.json --expect-major 1
+```
+
+consumer 起点: [meta/CONSUMER_HANDOFF.md](meta/CONSUMER_HANDOFF.md)  
+cutover guide: [meta/consumer-handoff/04-consumer-pr-guide-techdev-cursor.md](meta/consumer-handoff/04-consumer-pr-guide-techdev-cursor.md)
+
+---
+
+## Contract-first canon for Plan B (D-005 draft)
+
+Remote service implementation is not started yet. Before implementation, canonical
+contracts are fixed at:
+
+- [meta/contracts/README.md](meta/contracts/README.md)
+- [meta/contracts/http/openapi.yaml](meta/contracts/http/openapi.yaml)
+- [meta/contracts/sse/event-envelope.schema.json](meta/contracts/sse/event-envelope.schema.json)
+- [meta/contracts/mcp-tool-contract.md](meta/contracts/mcp-tool-contract.md)
+- [meta/contracts/connector-spi.md](meta/contracts/connector-spi.md)
+
+Current production path remains package CLI contract (`1.x`).
+
+---
+
 ## ディレクトリ構成
 
 ```text
 term-prep-platform/
+  src/term_prep_platform/   … package entrypoints（extract/sync/mcp/contract）
   mcp/                    … MCP サーバ（1 ツール = 1 パッケージ）
   scripts/                … glossary_extractor.py
   meta/glossary-pipeline/ … 問題・手段案・採択（他 repo へ移植可）
+  meta/contracts/         … Plan B contract canon（domain/surface/SPI）
   meta/schemas/           … glossary-config の JSON Schema
   meta/TODO.md             … 実行チェックリスト（Phase 0.5 含む）
   meta/TO-BE-PLATFORM.md  … ロードマップ · AS-IS / To-Be

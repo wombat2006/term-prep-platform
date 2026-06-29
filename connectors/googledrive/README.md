@@ -40,7 +40,7 @@ npm run drive:mirror -- \
   --output-dir /path/to/techdev-cursor/build/corpus/drive
 ```
 
-Or from platform root via `scripts/sync_corpus.py` (reads `glossary-config.json` `source` section).
+Or via package entrypoint `term-prep-sync` (reads `glossary-config.json` `source` section).
 
 ## Consumer config
 
@@ -66,7 +66,7 @@ After mirror, consumer `meta/glossary-config.json` should use globs under `build
 }
 ```
 
-Then in techdev-cursor: `npm run glossary:extract`
+Then in consumer: `term-prep-extract --config meta/glossary-config.json`
 
 ## Testing
 
@@ -81,7 +81,7 @@ bash scripts/run_phase05_checks.sh
 # Or individually:
 cd connectors/googledrive && npm run test
 python -m unittest discover -s tests -p 'test_*.py' -v
-python scripts/sync_corpus.py --check --config projects/techdev-cursor/glossary-config.json
+term-prep-sync --check --config /path/to/consumer/meta/glossary-config.json
 ```
 
 ### With credentials (deferred)
@@ -92,8 +92,8 @@ python scripts/sync_corpus.py --check --config projects/techdev-cursor/glossary-
 |------|---------|
 | Set env | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_REFRESH_TOKEN`, `GOOGLE_DRIVE_FOLDER_ID` |
 | Enable config | consumer `meta/glossary-config.json`: `source.enabled: true`, real `folder_id` |
-| Sync | `python scripts/sync_corpus.py --config <glossary-config.json>` |
-| Extract | `npm run glossary:extract` (consumer) or `glossary_extractor.py` |
+| Sync | `term-prep-sync --config <glossary-config.json>` |
+| Extract | `term-prep-extract --config <glossary-config.json>` |
 
 Expected: `build/corpus/drive/` populated, `mirror-manifest.json` present, extract reads `corpus.files` globs.
 

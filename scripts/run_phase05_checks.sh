@@ -11,10 +11,13 @@ echo "== connectors/googledrive: build + unit tests (no credentials) =="
 
 echo "== Python: glossary_extractor --check =="
 source .venv/bin/activate
-python scripts/glossary_extractor.py --check --config projects/techdev-cursor/glossary-config.json
+python scripts/glossary_extractor.py --check --config projects/_template/glossary-config.json
 
 echo "== Python: sync_corpus --check =="
-python scripts/sync_corpus.py --check --config projects/techdev-cursor/glossary-config.json
+python scripts/sync_corpus.py --check --config projects/_template/glossary-config.json
+
+echo "== Package contract check =="
+term-prep-contract-check --config projects/_template/glossary-config.json --expect-major 1
 
 echo "== Python: unittest (Phase 0.5, no credentials) =="
 python -m unittest discover -s tests -p 'test_*.py' -v

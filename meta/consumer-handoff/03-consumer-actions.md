@@ -9,15 +9,15 @@
 
 **Full spec (title, body, file contents):** [04-consumer-pr-guide-techdev-cursor.md](./04-consumer-pr-guide-techdev-cursor.md)
 
-Summary of what the consumer PR wires (platform already implemented the runtime):
+Summary of what the consumer PR wires (artifact boundary):
 
 | Consumer change | Purpose |
 |-----------------|---------|
-| `meta/TERM_PREP_PLATFORM_STATUS.md` | Shim → read this handoff pack |
-| `docs/DOCUMENTATION_INDEX.md` | Integration pointer |
-| `meta/glossary-config.json` | `source` block (`enabled: false`) |
-| `scripts/run-glossary-sync.sh` + npm `glossary:sync*` | Delegate to platform `sync_corpus.py` |
-| `meta/TO-BE-GLOSSARY-PIPELINE.md` | Phase 0.5 section |
+| package pin (`term-prep-platform==X.Y.Z`) | 安定した契約利用 |
+| `mcp.json` command | `term-prep-glossary-knowledge-mcp`（PATH 経由） |
+| npm scripts | `term-prep-extract` / `term-prep-sync` を呼ぶ |
+| `meta/glossary-config.json` | package schema に整合 |
+| CI | contract check（schema + semver） |
 
 Live OAuth sync remains **deferred** — see 04 § Follow-up PR.
 
@@ -27,14 +27,12 @@ Live OAuth sync remains **deferred** — see 04 § Follow-up PR.
 
 | # | Action | Repo | Status |
 |---|--------|------|--------|
-| A1 | Sibling clone or set `TERM_PREP_PLATFORM_ROOT` | consumer dev machine | user |
-| A2 | Register `glossary-knowledge` in `.cursor/mcp.json` | techdev-cursor | [docs/integrations/techdev-cursor.md](../../docs/integrations/techdev-cursor.md) |
-| A3 | Keep `meta/glossary-config.json` aligned with platform schema | techdev-cursor | ongoing |
-| A4 | Add pointers per [04-consumer-pr-guide-techdev-cursor.md](./04-consumer-pr-guide-techdev-cursor.md) | techdev-cursor PR | **use PR guide** |
+| A1 | package install source を決める（PyPI / private index） | consumer dev machine | user |
+| A2 | `mcp.json` を PATH ベース command に更新 | techdev-cursor | PR |
+| A3 | `meta/glossary-config.json` を package schema に整合 | techdev-cursor | ongoing |
+| A4 | CI に contract check 追加 | techdev-cursor | PR |
 
-### A4 — covered by consumer PR guide
-
-See [04-consumer-pr-guide-techdev-cursor.md](./04-consumer-pr-guide-techdev-cursor.md) § Files to add or change — includes `DOCUMENTATION_INDEX`, shim, npm scripts.
+Template: [templates/consumer-contract-ci.yml](./templates/consumer-contract-ci.yml)
 
 ---
 
@@ -44,20 +42,30 @@ No open platform blockers for in-repo corpus extract.
 
 ---
 
+## Plan B prep (contract-first, no migration yet)
+
+| # | Action | When | Notes |
+|---|--------|------|-------|
+| PB1 | Review canonical contracts in `meta/contracts/` | Before remote service adoption | read order starts at `meta/contracts/README.md` |
+| PB2 | Validate any custom wrappers against `ErrorEnvelope` and async job states | During adapter planning | avoid custom payload drift |
+| PB3 | Keep CI on package contract guard (`term-prep-contract-check`) | Every release | remains mandatory in `1.x` |
+
+No consumer code change is required yet for this draft contract set.
+
+---
+
 ## Phase 0.5 — Google Drive mirror (open)
 
 | # | Action | When | Notes |
 |---|--------|------|-------|
-| B1 | `cd ../term-prep-platform/connectors/googledrive && npm install && npm run build` | Before first sync | One-time per machine |
+| B1 | `term-prep-sync --check --config <consumer-config>` | Before first sync | package install 後 |
 | B2 | Set OAuth env vars | Before live sync | See [02-schema-and-cli.md](./02-schema-and-cli.md) |
 | B3 | `source.enabled: true` + real `folder_id` in `meta/glossary-config.json` | When Drive corpus ready | |
 | B4 | Update `corpus.files` to mirror globs | After B3 | e.g. `build/corpus/drive/**/*.md` |
-| B5 | Run sync before extract | Each corpus refresh | `npm run glossary:sync` after consumer PR |
+| B5 | Run sync before extract | Each corpus refresh | `npm run glossary:sync` |
 | B6 | Optional: npm hook `glossary:sync` before extract | Convenience | Spec in [04](./04-consumer-pr-guide-techdev-cursor.md) |
 | B7 | Live smoke: sync → extract | **Deferred** | Credentials not used in platform CI yet |
 | B8 | Thin re-export platform googledrive connector | Later (O-P007-004 step 3) | Reduce duplicate TS in consumer |
-
-**Platform mirror config** (reference only): [projects/techdev-cursor/glossary-config.json](../../projects/techdev-cursor/glossary-config.json) — `source.enabled: false` until user enables.
 
 ---
 
@@ -77,9 +85,9 @@ When blocked on platform:
 
 ```text
 Blocked: <goal>
-Read: ../term-prep-platform/meta/consumer-handoff/01-platform-status.md
-Platform status: <phase / item not done>
-Request: assign platform task or confirm workaround
+Read: platform release note + 01-platform-status.md
+Package version: <term-prep-platform X.Y.Z>
+Request: bump package / add contract support
 ```
 
 ---

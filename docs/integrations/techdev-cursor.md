@@ -2,170 +2,60 @@
 
 Consumer: [wombat2006/techdev-cursor](https://github.com/wombat2006/techdev-cursor)
 
-**Consumer read pack (platform progress):** [meta/consumer-handoff/README.md](../../meta/consumer-handoff/README.md) · [techdev-cursor checklist](../../meta/consumer-handoff/consumers/techdev-cursor.md) · **[consumer PR spec](../../meta/consumer-handoff/04-consumer-pr-guide-techdev-cursor.md)** (platform does not edit consumer repo)
-
-**Platform implementation:** [05-platform-implementation.md](../../meta/consumer-handoff/05-platform-implementation.md)
-
 ---
 
-## Role in platform flow
+## Ownership boundary
 
-techdev-cursor は **Outputs** 側 — ingest（Google Drive）と RAG index / bot dict / query expander を**保持**し、prep は本 repo の MCP + CLI を**参照**する。
-
-```mermaid
-flowchart LR
-  subgraph consumer ["techdev-cursor — consumer"]
-    Drive[Google Drive] --> RAG[RAG · devassist-dict · QX]
-  end
-  subgraph platform ["term-prep-platform — prep のみ"]
-    PREP[MCP + glossary_extractor]
-  end
-  Drive --> PREP
-  PREP -->|registry · adopt/hold| RAG
-
-  style platform fill:#e8f5e9,stroke:#2e7d32
-  style consumer fill:#e3f2fd,stroke:#1565c0
-```
-
-提供範囲: [ARCHITECTURE.md](../ARCHITECTURE.md#scope--この-prj-が提供するもの)
-
----
-
-## Use case
-
-Google Drive → document fetch → **prep** → OpenAI Vector Store (existing `googledrive-connector.ts`).
-
-Also: expand [devassist-dictionary-v0.json](https://github.com/wombat2006/techdev-cursor/blob/master/config/fork/devassist-dictionary-v0.json) from extracted terms.
-
----
-
-## Config
-
-[projects/techdev-cursor/glossary-config.json](../projects/techdev-cursor/glossary-config.json) — **Phase 0** schema (`filter` / `output` / `knowledge_filter`; adopt/hold split). 起動時に [JSON Schema](../schemas/glossary-config.schema.json) で検証。
-
-Consumer copy in repo: [techdev-cursor/meta/glossary-config.json](https://github.com/wombat2006/techdev-cursor/blob/master/meta/glossary-config.json)
-
-Set `corpus.files` when Google Drive sync local path is defined. Phase 0.5 mirror: [connectors/googledrive](../../connectors/googledrive/).
-
-```bash
-# 1. Build Drive connector (once)
-cd connectors/googledrive && npm install && npm run build
-
-# 2. Sync Drive → consumer build/corpus/drive (set source.enabled + folder_id in config)
-python scripts/sync_corpus.py --config projects/techdev-cursor/glossary-config.json
-
-# 3. Extract (platform) or consumer: npm run glossary:extract
-python scripts/glossary_extractor.py --config projects/techdev-cursor/glossary-config.json
-```
-
-When `source.enabled` is true, set `corpus.files` to globs such as `build/corpus/drive/**/*.md`.
-
-### Testing (Phase 0.5)
-
-**Credential-free (run now):** `bash scripts/run_phase05_checks.sh` — build, schema, glob resolution, CLI credential guards.
-
-**Consumer PR (wiring only, no OAuth):** [meta/consumer-handoff/04-consumer-pr-guide-techdev-cursor.md](../../meta/consumer-handoff/04-consumer-pr-guide-techdev-cursor.md)
-
-**With real Drive OAuth (deferred):** enable `source` in consumer config, set env vars, run `glossary:sync` then extract. Not executed in default checks.
-
-**Phase 0.5:** Google Drive corpus mirror は platform へ移管する **techdev-cursor [`googledrive-connector.ts`](https://github.com/wombat2006/techdev-cursor/blob/master/src/services/googledrive-connector.ts) の流用**が推奨方針（mirror モード）— [O-P007-004](../../meta/glossary-pipeline/options/O-P007-004-googledrive-connector-reuse.md)。
-
-**Phase 4.5:** 同一 connector の **vector モード**で RAG Vector 投入も platform 共通化する案 — consumer 側の再実装を減らす（[P-008](../../meta/glossary-pipeline/PROBLEMS.md#p-008)）。techdev-cursor Phase 4 hook はこの公式パスに接続予定。
-
-### Config 注意点
-
-| 項目 | 内容 |
+| Area | Owner |
 |---|---|
-| 二重管理 | platform `projects/techdev-cursor/` は mirror。本番 `--config` は consumer の `meta/glossary-config.json` を指す |
-| 検証 | どちらの config も同じ schema。編集後は `--check` で確認 |
-| 依存 | platform 側で `.venv` を使い `requirements-dev.txt` をインストール（システム Python 単体 pip 不可） |
-| schema 更新 | platform で config 形式を変えるときは `meta/schemas/` と consumer config を **同 PR / 同タイミング** で揃える |
+| `glossary_extractor`, `sync_corpus`, `glossary-knowledge` MCP | term-prep-platform |
+| `meta/glossary-config.json`, npm wiring, RAG consumer logic | techdev-cursor |
+| Genspark / aidrive | techdev-cursor only |
 
-詳細: [meta/schemas/README.md](../../meta/schemas/README.md)
-
-### Output layout (consumer repo)
-
-| Path | Git | Content |
-|------|-----|---------|
-| `meta/glossary-adopt.json` | ✅ | Adopt candidates |
-| `meta/glossary-hold.json` | ✅ | Hold candidates |
-| `meta/glossary-registry.json` | ✅ (Phase 2) | Registry seed — not yet |
-| `meta/glossary-candidates.json` | ❌ | Legacy — gitignored in consumer |
-| `build/glossary/reject.jsonl` | ❌ | Only if `emit_reject: true` |
+Platform does not edit consumer repo; consumer applies its own PR.
 
 ---
 
-## MCP registration
+## Contract (package entrypoints)
 
-Add to techdev-cursor `.cursor/mcp.json` alongside `techsapo-providers`:
-
-```json
-"glossary-knowledge": {
-  "command": "/path/to/term-prep-platform/.venv/bin/python",
-  "args": ["-m", "glossary_knowledge_mcp"],
-  "cwd": "/path/to/term-prep-platform/mcp/glossary-knowledge",
-  "env": {
-    "PYTHONPATH": "/path/to/term-prep-platform/mcp/glossary-knowledge"
-  }
-}
-```
-
-**Do not modify `techsapo-providers`.** `glossary-knowledge` is a separate stdio server for term classification (RAG prep).
+| Command | Purpose |
+|---|---|
+| `term-prep-extract --check --config <config>` | morphology + schema check |
+| `term-prep-extract --config <config>` | extract adopt/hold |
+| `term-prep-sync --check --config <config>` | sync preflight |
+| `term-prep-sync --config <config>` | mirror sync |
+| `term-prep-glossary-knowledge-mcp` | MCP stdio server |
+| `term-prep-contract-check --config <config> --expect-major 1` | contract guard |
 
 ---
 
-## Verification
-
-### Morphology check
-
-```bash
-python scripts/glossary_extractor.py --check \
-  --config projects/techdev-cursor/glossary-config.json
-```
-
-### MCP stub — `classify_term` (NullProvider → unknown)
-
-```bash
-cd mcp/glossary-knowledge
-PYTHONPATH=. python -c "
-from glossary_knowledge_mcp.server import classify_term, list_providers
-print(list_providers())
-r = classify_term('Wall-Bounce', domain='devassist-platform')
-assert r['label'] == 'unknown' and r['provider_id'] == 'null'
-print('OK:', r)
-"
-```
-
-Expected while `knowledge_filter.enabled: false`: all terms classified as `unknown` (stub).
-
-### Legacy ignore (consumer)
-
-```bash
-cd /path/to/techdev-cursor
-touch meta/glossary-candidates.json
-git check-ignore -v meta/glossary-candidates.json
-rm meta/glossary-candidates.json
-```
-
----
-
-## Insertion point (target)
+## Phase 0.5 (Drive mirror)
 
 ```text
-GoogleDriveRAGConnector.download/process
-    → [term-prep MCP batch]   … Phase 2.5+
-    → openai vector store upload
+Google Drive API
+  -> connectors/googledrive (platform)
+  -> build/corpus/drive/ (consumer workspace)
+  -> term-prep-extract
 ```
 
-Dictionary export (planned):
+Required env for live sync:
 
-```text
-platform registry → devassist-dictionary-v0.json
-  { term_id, surface } → { key, expansion, domain }
+- `GOOGLE_CLIENT_ID`
+- `GOOGLE_CLIENT_SECRET`
+- `GOOGLE_REFRESH_TOKEN`
+- optional `GOOGLE_DRIVE_FOLDER_ID`
+
+Credential-free verification remains available:
+
+```bash
+bash scripts/run_phase05_checks.sh
 ```
 
 ---
 
-## forkProfile.yaml
+## Consumer migration docs
 
-Existing swappable `dictionary` path can point at exported JSON from this platform.
+- [meta/consumer-handoff/README.md](../../meta/consumer-handoff/README.md)
+- [meta/consumer-handoff/04-consumer-pr-guide-techdev-cursor.md](../../meta/consumer-handoff/04-consumer-pr-guide-techdev-cursor.md)
+- [meta/consumer-handoff/02-schema-and-cli.md](../../meta/consumer-handoff/02-schema-and-cli.md)
+- [meta/contracts/README.md](../../meta/contracts/README.md) (Plan B contract-first draft)

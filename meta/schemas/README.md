@@ -73,7 +73,7 @@ import json
 from pathlib import Path
 import jsonschema
 schema = json.loads(Path('meta/schemas/glossary-config.schema.json').read_text())
-cfg = json.loads(Path('projects/techdev-cursor/glossary-config.json').read_text())
+cfg = json.loads(Path('projects/dopagaki-transition/glossary-config.json').read_text())
 jsonschema.validate(cfg, schema)
 print('OK')
 "
